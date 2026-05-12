@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "479923964650",
+    "project_id": "uberapp-50080",
+    "storage_bucket": "uberapp-50080.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:479923964650:android:5c2498dbc613a967aea593",
+        "android_client_info": {
+          "package_name": "com.laptrinhdidong.DoAn3"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "479923964650-4gdf4b849jbs9d30apc5k37mvidf3fed.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.laptrinhdidong.DoAn3",
+            "certificate_hash": "0076f7519d7d0ea15fa6467f33d957be4481c8d0"
+          }
+        },
+        {
+          "client_id": "479923964650-qk3vh623oba5qr3bhpgmkneek99sbbca.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDb4rQ_-Xo0xK5hoBBJrsj_CvaqWf9iq2A"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "479923964650-qk3vh623oba5qr3bhpgmkneek99sbbca.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,0 +1,138 @@
+@startuml DoAn3_Backend_Structure
+
+title **DoAn3 - Backend Structure**
+
+skinparam classAttributeIconSize 0
+skinparam maxMessageSize 150
+hide empty members
+
+package "backend/src" <<Frame>> #E8F5E9 {
+
+    package "middleware" <<Frame>> #BBDEFB {
+        class "authMiddleware" as AuthMw <<Middleware>> #ADD8E6 {
+            + authMiddleware(req, res, next): void
+            + verifyToken(token): User|null
+            + generateToken(userId): string
+        }
+    }
+
+    package "routes" <<Frame>> #C8E6C9 {
+        class "auth.js" as AuthR <<Route>> #C8E6C9 {
+            + POST /register(email, password, name, phone, user_type)
+            + POST /login(email, password)
+            + POST /fcm/register(fcm_token, device_id)
+        }
+        class "rides.js" as RideR <<Route>> #C8E6C9 {
+            + POST /request(pickup_lat, dest_lat, vehicle_type)
+            + GET / list: Ride[]
+            + GET /active: Ride|null
+            + GET /:id: Ride
+            + PUT /:id/status(status, driverLat, driverLng)
+            + POST /:id/rate(rating, comment)
+        }
+        class "drivers.js" as DriverR <<Route>> #C8E6C9 {
+            + GET /profile: Driver
+            + PUT /status(is_available, lat, lng)
+            + GET /ride/available: Ride[]
+            + POST /ride/:id/accept: Ride
+            + GET /earnings?from&to: Earnings
+        }
+        class "ai.js" as AIR <<Route>> #C8E6C9 {
+            + POST /schedule/create(schedule_name, date, waypoints)
+            + GET /schedule/:id: AISchedule
+            + POST /schedule/:id/optimize(optimization_type)
+            + GET /recommendations: Recommendations
+            + GET /batch/available: Batch[]
+            + POST /batch/:id/accept: Batch
+        }
+        class "chat.js" as ChatR <<Route>> #C8E6C9 {
+            + GET /:rideId/messages: Message[]
+            + POST /:rideId/send(message)
+        }
+    }
+
+    package "repositories" <<Frame>> #FFE0B2 {
+        class "rideRepository.js" as RideRepo <<Repository>> #FFE0B2 {
+            + create(passengerId, pickup, dest, vehicleType): Promise<Ride>
+            + findById(id): Promise<Ride|null>
+            + findHistoryByUser(userId, userType): Promise<Ride[]>
+            + findActiveByUser(userId, userType): Promise<Ride|null>
+            + updateStatus(id, status): Promise<Ride>
+            + assignDriver(rideId, driverId): Promise<void>
+            + rate(id, rating, comment, raterType): Promise<Ride>
+            + findNearbyDrivers(lat, lng, radius): Promise<Driver[]>
+        }
+        class "driverRepository.js" as DriverRepo <<Repository>> #FFE0B2 {
+            + updateStatus(userId, isAvailable, lat, lng): Promise<Driver>
+            + setUnavailable(userId, rideId): Promise<void>
+            + setAvailable(userId): Promise<void>
+            + getEarnings(driverId, fromDate, toDate): Promise<Earnings>
+            + recordEarning(driverId, rideId, amount): Promise<void>
+        }
+        class "aiRepository.js" as AIRepo <<Repository>> #FFE0B2 {
+            + createSchedule(userId, scheduleName, date, waypoints): Promise<AISchedule>
+            + getScheduleById(id): Promise<AISchedule>
+            + getAlternatives(scheduleId): Promise<RouteAlternative[]>
+            + reoptimize(id, optimizationType): Promise<RouteAlternative[]>
+            + getRecommendations(userId): Promise<Recommendations>
+            + optimizeRides(passengerCount, rides): Promise<Batch[]>
+            + getAvailableBatches(driverId): Promise<Batch[]>
+            + acceptBatch(id, driverId): Promise<Batch>
+        }
+    }
+
+    package "utils" <<Frame>> #EFEBE9 {
+        class "geo.js" as Geo <<Util>> #D7CCC8 {
+            + const R = 6371
+            + haversineDistance(lat1, lng1, lat2, lng2): Double
+            + estimateRideDetails(pickup, dest): Object
+            + getTrafficCondition(hour?): String
+        }
+        class "price.js" as Price <<Util>> #D7CCC8 {
+            + BASE_FARE_MOTORBIKE = 10000
+            + BASE_FARE_4SEATS = 12000
+            + BASE_FARE_7SEATS = 15000
+            + PRICE_PER_KM = {3000, 5000, 7000}
+            + calculatePrice(distanceKm, durationMin, vehicleType): Double
+            + optimizeNearestNeighbor(rides): Ride[]
+        }
+    }
+
+    class "notification.js" as Notif <<Service>> #CE93D8 {
+        + initFirebase(): void
+        + sendToUser(userId, title, body, data): Promise<void>
+        + sendToDrivers(title, body, data): Promise<void>
+    }
+
+    class "socket/index.js" as Socket <<Socket.IO>> #B3E5FC {
+        - ioInstance: Server
+        + initSocket(httpServer): Server
+        + getIO(): Server|null
+    }
+}
+
+' Relationships
+AuthR ..> AuthMw
+RideR ..> AuthMw
+DriverR ..> AuthMw
+AIR ..> AuthMw
+RideR --> RideRepo
+RideR --> DriverRepo
+DriverR --> DriverRepo
+DriverR --> RideRepo
+AIR --> AIRepo
+RideRepo ..> Geo
+RideRepo ..> Price
+AIRepo ..> Geo
+AIRepo ..> Price
+Socket --> Notif
+
+legend right
+|= Color |= Layer |
+|= <back:#BBDEFB>   </back> | Middleware |
+|= <back:#C8E6C9>   </back> | Routes |
+|= <back:#FFE0B2>   </back> | Repositories |
+|= <back:#EFEBE9>   </back> | Utils |
+endlegend
+
+@enduml

@@ -1,0 +1,946 @@
+================================================================================
+FILE 1: KHMT - Báo Cáo Đồ Án 3 - LÊ ĐĂNG KHOA - TRẦN NGUYỄN TUẤN ANH.docx
+================================================================================
+TRƯỜNG ĐẠI HỌC CÔNG NGHỆ THÔNG TIN VÀ TRUYỀN THÔNG
+VIỆT - HÀN
+KHOA KHOA HỌC MÁY TÍNH
+ĐỒ ÁN CƠ SỞ 3
+ĐỀ TÀI: XÂY DỰNG HỆ THỐNG ĐẶT XE THÔNG MINH KẾT HỢP TRỢ LÝ DU LỊCH AI TRÊN NỀN TẢNG DI ĐỘNG
+	Nhóm thực hiện:	Lê Đăng Khoa – 24IT119 
+			Trần Nguyễn Tuấn Anh – 24IT010
+		Giảng viên hướng dẫn: TS. Nguyễn Quang Vũ
+Đà Nẵng, tháng 06 năm 2026
+TRƯỜNG ĐẠI HỌC CÔNG NGHỆ THÔNG TIN VÀ TRUYỀN THÔNG
+VIỆT - HÀN
+KHOA KHOA HỌC MÁY TÍNH
+ĐỒ ÁN CƠ SỞ 3
+ĐỀ TÀI: XÂY DỰNG HỆ THỐNG ĐẶT XE THÔNG MINH KẾT HỢP TRỢ LÝ DU LỊCH AI TRÊN NỀN TẢNG DI ĐỘNG
+	Nhóm thực hiện:	Lê Đăng Khoa – 24IT119 
+			Trần Nguyễn Tuấn Anh – 24IT010
+Giảng viên hướng dẫn: TS. Nguyễn Quang Vũ
+Đà Nẵng, tháng 06 năm 2026
+NHẬN XÉT CỦA GIẢNG VIÊN HƯỚNG DẪN
+LỜI CẢM ƠN
+Trong quá trình học tập và thực hiện Đồ án Cơ sở 2 với đề tài “XÂY DỰNG HỆ THỐNG ĐẶT XE THÔNG MINH KẾT HỢP TRỢ LÝ DU LỊCH AI TRÊN NỀN TẢNG DI ĐỘNG”, chúng em đã nhận được sự quan tâm, giúp đỡ và hướng dẫn quý báu từ Quý Thầy Cô Trường Đại học Công nghệ Thông tin & Truyền thông Việt – Hàn. Nhờ đó, chúng em mới có thể hoàn thành đề tài một cách trọn vẹn.
+Trước hết, chúng em xin được bày tỏ lòng biết ơn chân thành và sâu sắc nhất đến TS. Nguyễn Quang Vũ, giảng viên hướng dẫn đồ án. Thầy đã luôn tận tâm chỉ bảo, định hướng phương pháp nghiên cứu, góp ý chi tiết về nội dung và kỹ thuật, đồng thời động viên chúng em nỗ lực vượt qua những khó khăn trong suốt quá trình thực hiện. Sự tận tụy và nghiêm túc của Thầy là nguồn động lực to lớn giúp chúng em hoàn thiện đề tài này.
+Chúng em cũng xin gửi lời cảm ơn đến Quý Thầy Cô Khoa Khoa học Máy tính, những người đã truyền đạt nền tảng kiến thức vững chắc và phương pháp tư duy khoa học trong suốt thời gian học tập tại trường. Những kiến thức đó chính là cơ sở quan trọng để chúng em vận dụng vào việc phân tích, thiết kế và xây dựng hệ thống của đề tài.
+Bên cạnh đó, chúng em xin trân trọng cảm ơn gia đình và bạn bè đã luôn đồng hành, khích lệ tinh thần, tạo điều kiện thuận lợi để chúng em yên tâm học tập và nghiên cứu.
+Mặc dù đã nỗ lực hết mình, báo cáo khó tránh khỏi những thiếu sót nhất định. Chúng em kính mong nhận được sự đóng góp ý kiến của Quý Thầy Cô để đề tài được hoàn thiện hơn trong tương lai.
+	Sinh viên thực hiện
+	   Lê Đăng Khoa
+	Trần Nguyễn Tuấn Anh
+MỤC LỤC
+DANH MỤC CÁC TỪ VIẾT TẮT
+DANH MỤC HÌNH VẼ
+DANH MỤC BẢNG BIỂU
+MỞ ĐẦU
+1. Giới thiệu
+Trong bối cảnh chuyển đổi số đang diễn ra mạnh mẽ, các ứng dụng di động thông minh ngày càng đóng vai trò quan trọng trong đời sống hiện đại, đặc biệt trong lĩnh vực vận tải và du lịch. Nhu cầu đặt xe nhanh chóng, an toàn, tiện lợi kết hợp với khả năng hỗ trợ thông tin du lịch đang trở thành xu hướng phổ biến đối với người dùng hiện nay. Tuy nhiên, nhiều ứng dụng hiện tại vẫn còn tồn tại hạn chế như thiếu khả năng cá nhân hóa, hỗ trợ du lịch chưa hiệu quả hoặc chưa tích hợp các công nghệ trí tuệ nhân tạo nhằm nâng cao trải nghiệm người dùng.
+Xuất phát từ thực tế đó, nhóm lựa chọn thực hiện đề tài “Xây dựng hệ thống đặt xe thông minh kết hợp trợ lý du lịch AI trên nền tảng di động” nhằm phát triển một ứng dụng hỗ trợ người dùng đặt xe trực tuyến, theo dõi hành trình và đồng thời cung cấp các gợi ý du lịch thông minh thông qua trợ lí du lịch AI.
+Hệ thống được xây dựng với frontend sử dụng Android Studio, Kotlin và Jetpack Compose, backend sử dụng PHP, cơ sở dữ liệu MySQL Server, kết hợp RESTful API để giao tiếp giữa các thành phần của hệ thống. Ứng dụng hỗ trợ nhiều chức năng như đăng ký – đăng nhập, đặt xe, quản lý chuyến đi, theo dõi hành trình, thanh toán, đánh giá tài xế và trợ lý AI hỗ trợ tư vấn địa điểm du lịch, lịch trình và các dịch vụ liên quan.
+Mục giới thiệu này giúp định hình bối cảnh, mục tiêu và định hướng phát triển của đề tài, đồng thời làm cơ sở cho quá trình phân tích, thiết kế và triển khai hệ thống trong các chương tiếp theo.
+2. Mục tiêu của đề tài
+Đề tài “Xây dựng hệ thống đặt xe thông minh kết hợp trợ lý du lịch AI trên nền tảng di động” hướng đến việc phát triển một ứng dụng di động hiện đại, hỗ trợ người dùng đặt xe nhanh chóng, thuận tiện và an toàn; đồng thời tích hợp trợ lý AI nhằm nâng cao trải nghiệm du lịch thông minh trong thời đại số.
+Mục tiêu chính của đề tài là xây dựng một hệ thống hoàn chỉnh bao gồm ứng dụng di động dành cho khách hàng và tài xế, cùng với hệ thống quản trị dữ liệu ở phía máy chủ. Ứng dụng cần đáp ứng các chức năng cơ bản như đăng ký, đăng nhập, đặt xe, quản lý chuyến đi, theo dõi vị trí trên bản đồ, thanh toán, đánh giá và phản hồi dịch vụ.
+Bên cạnh đó, đề tài hướng đến việc tích hợp trợ lý du lịch AI nhằm hỗ trợ người dùng tìm kiếm địa điểm du lịch, đề xuất lịch trình, gợi ý món ăn, khách sạn hoặc các điểm tham quan phù hợp với nhu cầu cá nhân. Đây là điểm nổi bật giúp hệ thống không chỉ dừng lại ở chức năng đặt xe mà còn mở rộng sang lĩnh vực hỗ trợ du lịch thông minh.
+Ngoài ra, hệ thống được xây dựng theo mô hình frontend – backend tách biệt nhằm đảm bảo tính linh hoạt, dễ bảo trì và khả năng mở rộng trong tương lai. Việc sử dụng Kotlin kết hợp Jetpack Compose giúp tối ưu giao diện người dùng trên nền tảng Android, trong khi PHP và MySQL đảm bảo khả năng xử lý dữ liệu và quản lý hệ thống hiệu quả.
+Thông qua quá trình thực hiện đề tài, nhóm cũng hướng đến việc nâng cao kỹ năng phân tích yêu cầu, thiết kế hệ thống, xây dựng API, phát triển ứng dụng di động và triển khai cơ sở dữ liệu thực tế.
+3. Nội dung và kế hoạch phát triển
+Để triển khai đề tài “Xây dựng hệ thống đặt xe thông minh kết hợp trợ lý du lịch AI trên nền tảng di động” một cách khoa học và hiệu quả, nhóm xây dựng quy trình thực hiện gồm nhiều giai đoạn tương ứng với quy trình phát triển phần mềm.
+Trước hết, nhóm tiến hành khảo sát và phân tích yêu cầu nhằm xác định các chức năng chính của hệ thống, đối tượng sử dụng và phạm vi triển khai. Các chức năng cốt lõi bao gồm đặt xe, quản lý chuyến đi, hỗ trợ tài xế, thanh toán, quản lý doanh thu và trợ lý AI hỗ trợ du lịch.
+Tiếp theo, nhóm thực hiện phân tích và thiết kế hệ thống thông qua các sơ đồ Use Case, Activity Diagram, Sequence Diagram và thiết kế cơ sở dữ liệu. Các mô hình này giúp mô tả luồng xử lý nghiệp vụ, cấu trúc dữ liệu và mối quan hệ giữa các thành phần trong hệ thống.
+Sau giai đoạn thiết kế, nhóm tiến hành xây dựng frontend ứng dụng di động bằng Kotlin và Jetpack Compose trên Android Studio. Đồng thời, backend được phát triển bằng PHP với các RESTful API phục vụ cho việc xử lý dữ liệu và giao tiếp với ứng dụng di động. Cơ sở dữ liệu MySQL được xây dựng theo mô hình chuẩn hóa nhằm đảm bảo tính toàn vẹn và hiệu quả truy vấn.
+Bên cạnh đó, nhóm triển khai tích hợp Google Maps API nhằm hỗ trợ định vị vị trí, hiển thị hành trình và hỗ trợ chức năng đặt xe trực quan hơn. Trợ lý AI cũng được xây dựng nhằm cung cấp khả năng tư vấn địa điểm du lịch, lịch trình và hỗ trợ người dùng trong quá trình sử dụng hệ thống.
+Sau khi hoàn thiện các chức năng chính, nhóm tiến hành kiểm thử hệ thống bao gồm kiểm thử chức năng, giao diện, API và khả năng xử lý dữ liệu. Các lỗi phát sinh được ghi nhận và khắc phục nhằm nâng cao tính ổn định và hiệu năng của ứng dụng.
+Cuối cùng, nhóm thực hiện tổng hợp kết quả, hoàn thiện báo cáo, chuẩn bị slide và nội dung bảo vệ đồ án.
+Về tiến độ thực hiện, toàn bộ đề tài được triển khai trong tám tuần, bao gồm các giai đoạn khảo sát yêu cầu, phân tích thiết kế, lập trình frontend, xây dựng backend, tích hợp chức năng, kiểm thử và hoàn thiện báo cáo.
+4. Bố cục báo cáo
+Sau phần Mở đầu, báo cáo được trình bày trong năm chương, cụ thể như sau:
+- Chương 1. Giới thiệu
+Chương này trình bày bối cảnh hình thành đề tài, lý do lựa chọn đề tài, mục tiêu nghiên cứu, phạm vi thực hiện và phương pháp triển khai hệ thống. Đồng thời, chương cũng giới thiệu tổng quan về các công nghệ được sử dụng trong quá trình phát triển ứng dụng.
+- Chương 2. Nghiên cứu tổng quan 
+Chương này tập trung trình bày các kiến thức liên quan đến hệ thống đặt xe trực tuyến, ứng dụng du lịch thông minh, kiến trúc ứng dụng di động và các công nghệ nền tảng như Kotlin, Jetpack Compose, PHP, MySQL và RESTful API. Ngoài ra, chương cũng nghiên cứu một số mô hình trợ lý AI hỗ trợ người dùng trong lĩnh vực du lịch.
+- Chương 3. Phân tích và thiết kế hệ thống
+Chương này trình bày quá trình phân tích nghiệp vụ và xác định yêu cầu chức năng, phi chức năng của hệ thống. Các sơ đồ phân tích như Use Case Diagram, Activity Diagram, Sequence Diagram, State Diagram và thiết kế cơ sở dữ liệu được xây dựng nhằm mô tả chi tiết hoạt động của hệ thống trước khi triển khai.
+- Chương 4. Triển khai xây dựng hệ thống
+Chương này mô tả chi tiết quá trình hiện thực hóa các chức năng của hệ thống dựa trên bản thiết kế đã xây dựng. Nội dung bao gồm xây dựng giao diện ứng dụng di động bằng Kotlin và Jetpack Compose trên Android Studio, lập trình backend bằng PHP, xây dựng RESTful API và tổ chức cơ sở dữ liệu MySQL Server.
+Chương cũng trình bày quá trình triển khai các chức năng chính như đăng ký – đăng nhập, đặt xe, quản lý chuyến đi, theo dõi hành trình trên bản đồ, thanh toán, đánh giá tài xế và trợ lý du lịch AI hỗ trợ người dùng. Đồng thời, chương thực hiện kiểm thử chức năng, kiểm thử giao diện và đánh giá mức độ ổn định cũng như hiệu năng của hệ thống.
+- Chương 5. Kết luận và hướng phát triển
+Chương cuối cùng tổng hợp những kết quả đạt được sau quá trình nghiên cứu và triển khai đề tài, đánh giá các ưu điểm, hạn chế còn tồn tại và đề xuất các hướng phát triển trong tương lai như tích hợp thanh toán điện tử, định vị thời gian thực nâng cao, AI cá nhân hóa và mở rộng sang các dịch vụ du lịch khác.
+Cuối cùng là phần Kết luận, Tài liệu tham khảo và Phụ lục bao gồm hình ảnh giao diện hệ thống, mã nguồn minh họa và các tài liệu liên quan phục vụ cho quá trình nghiên cứu và phát triển đề tài.
+CHƯƠNG 1. GIỚI THIỆU
+Chương này trình bày các cơ sở lý luận và thực tiễn liên quan đến đề tài “Xây dựng hệ thống đặt xe thông minh kết hợp trợ lý du lịch AI trên nền tảng di động”, bao gồm bối cảnh, khái niệm nền tảng và các công nghệ được sử dụng trong quá trình phát triển hệ thống. Nội dung chương giúp xác định phạm vi, ý nghĩa và định hướng của đề tài, đồng thời tạo cơ sở cho việc phân tích, thiết kế và triển khai hệ thống ở các chương tiếp theo.
+1.1. Bối cảnh và sự cần thiết của đề tài
+Trong thời đại công nghệ số phát triển mạnh mẽ, các ứng dụng di động thông minh ngày càng đóng vai trò quan trọng trong nhiều lĩnh vực của đời sống xã hội, đặc biệt là lĩnh vực vận tải và du lịch. Sự phổ biến của điện thoại thông minh cùng với Internet tốc độ cao đã thúc đẩy xu hướng sử dụng các ứng dụng đặt xe trực tuyến nhằm mang lại sự tiện lợi, nhanh chóng và tiết kiệm thời gian cho người dùng.
+Bên cạnh đó, ngành du lịch cũng đang từng bước chuyển đổi số nhằm nâng cao trải nghiệm khách hàng. Nhu cầu tìm kiếm thông tin địa điểm du lịch, gợi ý lịch trình, lựa chọn phương tiện di chuyển và hỗ trợ trong quá trình tham quan ngày càng tăng cao. Tuy nhiên, phần lớn các ứng dụng hiện nay chỉ tập trung vào một chức năng riêng lẻ như đặt xe hoặc hỗ trợ du lịch mà chưa tích hợp đồng bộ nhằm tạo ra trải nghiệm toàn diện cho người dùng.
+Ngoài ra, nhiều hệ thống hiện tại vẫn còn tồn tại những hạn chế như:
+Khả năng cá nhân hóa chưa cao.
+Thiếu hỗ trợ tư vấn thông minh.
+Chưa tận dụng hiệu quả công nghệ trí tuệ nhân tạo.
+Khó kết hợp giữa nhu cầu di chuyển và hỗ trợ du lịch trong cùng một nền tảng.
+Xuất phát từ thực tế đó, việc nghiên cứu và xây dựng một hệ thống đặt xe thông minh kết hợp trợ lý du lịch AI trên nền tảng di động là cần thiết và có ý nghĩa thực tiễn cao. Hệ thống không chỉ hỗ trợ người dùng đặt xe nhanh chóng mà còn cung cấp các gợi ý du lịch thông minh, hỗ trợ tìm kiếm địa điểm, đề xuất lịch trình và nâng cao trải nghiệm người dùng thông qua trợ lý AI.
+Đề tài mang ý nghĩa học thuật trong việc nghiên cứu và áp dụng các công nghệ hiện đại như phát triển ứng dụng di động, RESTful API, định vị GPS, Google Maps API và trí tuệ nhân tạo vào bài toán thực tế. Đồng thời, đề tài cũng có khả năng ứng dụng và mở rộng trong môi trường thực tiễn.
+1.2. Các khái niệm và cơ sở lý luận liên quan
+1.2.1. Khái niệm hệ thống đặt xe trực tuyến
+Hệ thống đặt xe trực tuyến là một nền tảng cho phép người dùng đặt phương tiện di chuyển thông qua Internet hoặc ứng dụng di động. Hệ thống hỗ trợ kết nối giữa khách hàng và tài xế, giúp thực hiện các chức năng như xác định vị trí, đặt xe, theo dõi hành trình, thanh toán và đánh giá dịch vụ.
+Các hệ thống đặt xe hiện đại thường sử dụng công nghệ định vị GPS và bản đồ số để xác định khoảng cách, tối ưu tuyến đường và hỗ trợ điều hướng theo thời gian thực.
+1.2.2. Ứng dụng di động thông minh
+Ứng dụng di động thông minh là các ứng dụng được phát triển trên nền tảng thiết bị di động nhằm hỗ trợ người dùng thực hiện nhiều chức năng khác nhau một cách linh hoạt và tiện lợi. Các ứng dụng hiện đại không chỉ cung cấp giao diện trực quan mà còn tích hợp nhiều công nghệ như định vị, bản đồ số, trí tuệ nhân tạo và xử lý dữ liệu thời gian thực nhằm nâng cao trải nghiệm sử dụng.
+Trong đề tài này, ứng dụng di động được xây dựng trên nền tảng Android bằng Kotlin và Jetpack Compose nhằm đảm bảo hiệu năng, tính ổn định và khả năng mở rộng trong tương lai.
+1.2.3. Trợ lý AI trong du lịch
+Trợ lý AI là hệ thống sử dụng trí tuệ nhân tạo để hỗ trợ người dùng thông qua khả năng xử lý thông tin, gợi ý và phản hồi tự động. Trong lĩnh vực du lịch, trợ lý AI có thể hỗ trợ:
+Gợi ý địa điểm tham quan.
+Đề xuất lịch trình phù hợp.
+Tư vấn phương tiện di chuyển.
+Gợi ý món ăn, khách sạn và dịch vụ du lịch.
+Hỗ trợ giải đáp các câu hỏi liên quan đến chuyến đi.
+Việc tích hợp trợ lý AI giúp hệ thống trở nên thông minh hơn và mang lại trải nghiệm cá nhân hóa cho người dùng.
+1.2.4. Định vị GPS và bản đồ số
+GPS là hệ thống định vị toàn cầu cho phép xác định vị trí của thiết bị theo thời gian thực. Trong các ứng dụng đặt xe, GPS đóng vai trò quan trọng trong việc:
+Xác định vị trí khách hàng và tài xế.
+Hiển thị tuyến đường di chuyển.
+Theo dõi hành trình.
+Tính toán khoảng cách và thời gian di chuyển.
+Bản đồ số như Google Maps API hỗ trợ hiển thị vị trí trực quan, tìm kiếm địa điểm và hỗ trợ điều hướng trong quá trình sử dụng ứng dụng.
+1.3. Tổng quan về công nghệ sử dụng
+1.3.1. Kotlin và Jetpack Compose 
+Lý do lựa chọn: 
+Kotlin là ngôn ngữ chính thức được Google hỗ trợ cho phát triển Android.
+Cú pháp ngắn gọn, hiện đại và dễ bảo trì.
+Hỗ trợ lập trình bất đồng bộ hiệu quả.
+Jetpack Compose giúp xây dựng giao diện hiện đại, trực quan và dễ mở rộng.
+Tăng tốc quá trình phát triển ứng dụng mobile.
+→ Đây là lựa chọn phù hợp để xây dựng giao diện ứng dụng di động hiện đại trên Android.
+Hình 1.1 – Kotlin và Jetpack Compose
+1.3.2. Android Studio
+Lý do lựa chọn: 
+Là môi trường phát triển chính thức cho Android.
+Hỗ trợ mạnh mẽ cho Kotlin và Jetpack Compose.
+Tích hợp nhiều công cụ debug, emulator và quản lý project.
+Hỗ trợ tối ưu hóa hiệu năng ứng dụng.
+→ Android Studio giúp quá trình phát triển và kiểm thử ứng dụng trở nên thuận tiện và hiệu quả hơn.
+Hình 1.2 – Android Studio
+1.3.3. PHP
+Lý do lựa chọn:
+Dễ xây dựng RESTful API.
+Khả năng xử lý dữ liệu tốt.
+Dễ triển khai và kết nối với MySQL.
+Phù hợp với các hệ thống backend quy mô vừa và nhỏ.
+Có cộng đồng hỗ trợ lớn.
+→ PHP phù hợp để xây dựng backend cho hệ thống đặt xe và quản lý dữ liệu.
+Hình 1.3 – PHP
+1.3.4. MySQL Server
+Lý do lựa chọn:
+Là hệ quản trị cơ sở dữ liệu phổ biến và ổn định.
+Hỗ trợ lưu trữ dữ liệu quan hệ hiệu quả.
+Tương thích tốt với PHP.
+Hiệu năng tốt khi xử lý dữ liệu lớn.
+Dễ quản lý và mở rộng.
+→ MySQL phù hợp cho việc quản lý dữ liệu người dùng, chuyến đi, thanh toán và thông tin du lịch.
+Hình 1.4 – MySQL Server
+1.3.5. RESTful API
+Lý do lựa chọn:
+Giúp frontend và backend hoạt động độc lập.
+Dễ mở rộng và bảo trì.
+Truyền dữ liệu nhẹ thông qua JSON.
+Hỗ trợ tốt cho ứng dụng di động.
+→ RESTful API đóng vai trò trung gian kết nối giữa ứng dụng Android và máy chủ. 
+1.3.6. Google Maps API
+Lý do lựa chọn:
+Hỗ trợ hiển thị bản đồ trực quan.
+Cho phép định vị và theo dõi vị trí thời gian thực.
+Hỗ trợ tìm kiếm địa điểm và tính toán tuyến đường.
+Tích hợp dễ dàng với Android.
+→ Google Maps API giúp nâng cao trải nghiệm người dùng trong hệ thống đặt xe.
+1.3.7. Trợ lý AI
+Lý do lựa chọn:
+Hỗ trợ tư vấn du lịch thông minh.
+Tăng khả năng tương tác với người dùng.
+Cá nhân hóa trải nghiệm sử dụng.
+Hỗ trợ trả lời tự động và đề xuất địa điểm phù hợp.
+→ Trợ lý AI là thành phần nổi bật giúp hệ thống trở nên thông minh và hiện đại hơn.
+1.4. Mục tiêu và định hướng nghiên cứu
+Đề tài hướng đến mục tiêu xây dựng một hệ thống đặt xe thông minh hoạt động ổn định, an toàn và thân thiện với người dùng trên nền tảng di động. Hệ thống được phát triển nhằm hỗ trợ người dùng thực hiện các thao tác như đăng ký tài khoản, đăng nhập, đặt xe trực tuyến, theo dõi hành trình trên bản đồ, quản lý lịch sử chuyến đi, thanh toán và đánh giá chất lượng dịch vụ. Bên cạnh đó, hệ thống còn tích hợp trợ lý du lịch AI nhằm hỗ trợ người dùng tìm kiếm địa điểm tham quan, gợi ý lịch trình, đề xuất các dịch vụ phù hợp và nâng cao trải nghiệm trong quá trình sử dụng ứng dụng.
+Ngoài việc đáp ứng các yêu cầu chức năng cơ bản của một hệ thống đặt xe hiện đại, đề tài còn chú trọng đến việc xây dựng giao diện trực quan, dễ sử dụng và tối ưu trải nghiệm người dùng trên thiết bị di động. Hệ thống được thiết kế theo mô hình frontend – backend tách biệt nhằm đảm bảo tính linh hoạt, dễ bảo trì và khả năng mở rộng trong tương lai.
+Về mặt học thuật, đề tài giúp sinh viên củng cố và vận dụng các kiến thức liên quan đến phát triển ứng dụng Android bằng Kotlin và Jetpack Compose, thiết kế RESTful API, xây dựng cơ sở dữ liệu MySQL, tích hợp Google Maps API cũng như áp dụng trí tuệ nhân tạo vào các bài toán thực tế. Đồng thời, quá trình thực hiện đề tài còn góp phần rèn luyện kỹ năng phân tích hệ thống, tư duy logic, làm việc nhóm và giải quyết vấn đề trong quá trình phát triển phần mềm.
+1.5. Nội dung thực hiện của đề tài
+Để triển khai đề tài “Xây dựng hệ thống đặt xe thông minh kết hợp trợ lý du lịch AI trên nền tảng di động”, nhóm tiến hành thực hiện nhiều nội dung theo từng giai đoạn cụ thể của quá trình phát triển phần mềm. Trước hết, nhóm thực hiện khảo sát và phân tích yêu cầu nhằm xác định các chức năng cần thiết của hệ thống, đối tượng sử dụng và phạm vi triển khai của ứng dụng.
+Sau quá trình khảo sát, nhóm tiến hành phân tích và thiết kế hệ thống thông qua các sơ đồ UML như Use Case Diagram, Activity Diagram, Sequence Diagram và State Diagram nhằm mô tả luồng xử lý, mối quan hệ giữa các thành phần và hoạt động tổng thể của hệ thống. Đồng thời, cơ sở dữ liệu cũng được thiết kế theo mô hình quan hệ nhằm đảm bảo tính toàn vẹn và hiệu quả trong việc lưu trữ dữ liệu.
+Tiếp theo, nhóm triển khai xây dựng giao diện ứng dụng di động bằng Kotlin và Jetpack Compose trên Android Studio. Backend của hệ thống được xây dựng bằng PHP kết hợp với MySQL Server nhằm xử lý dữ liệu và cung cấp các RESTful API phục vụ giao tiếp giữa ứng dụng di động và máy chủ.
+Bên cạnh đó, hệ thống còn được tích hợp Google Maps API nhằm hỗ trợ định vị vị trí, hiển thị bản đồ và theo dõi hành trình theo thời gian thực. Ngoài ra, nhóm cũng triển khai trợ lý du lịch AI nhằm hỗ trợ người dùng tìm kiếm thông tin, gợi ý địa điểm và đề xuất lịch trình phù hợp với nhu cầu cá nhân.
+Sau khi hoàn thiện các chức năng chính, nhóm tiến hành kiểm thử hệ thống nhằm đánh giá tính ổn định, khả năng hoạt động và trải nghiệm người dùng trước khi hoàn thiện báo cáo và triển khai bảo vệ đồ án.
+1.6. Phương pháp nghiên cứu
+Để triển khai đề tài “Xây dựng hệ thống đặt xe thông minh kết hợp trợ lý du lịch AI trên nền tảng di động”, nhóm áp dụng một số phương pháp nghiên cứu và tiếp cận kỹ thuật nhằm đảm bảo tính khoa học, logic và hiệu quả trong quá trình phát triển hệ thống. Các phương pháp được sử dụng bao gồm:
+1.6.1. Phương pháp nghiên cứu tài liệu
+Nhóm tiến hành thu thập và nghiên cứu các tài liệu liên quan đến:
+Hệ thống đặt xe trực tuyến và các mô hình ứng dụng vận tải công nghệ. 
+Công nghệ phát triển ứng dụng Android hiện đại (Kotlin, Jetpack Compose, Android Studio).
+Công nghệ backend và cơ sở dữ liệu (PHP, MySQL Server).
+RESTful API và các phương pháp giao tiếp dữ liệu giữa frontend – backend.
+Google Maps API, GPS và các giải pháp định vị thời gian thực.
+Các mô hình trợ lý AI và ứng dụng AI trong lĩnh vực du lịch.
+Các báo cáo, luận văn và tài liệu tham khảo có nội dung tương đồng.
+Phương pháp này giúp nhóm xây dựng nền tảng kiến thức vững chắc trước khi bước vào quá trình phân tích và thiết kế hệ thống.
+1.6.2. Phương pháp phân tích hệ thống
+Nhằm xác định chính xác yêu cầu của ứng dụng và mô tả đầy đủ hoạt động của hệ thống, nhóm sử dụng các kỹ thuật:
+Phân tích yêu cầu chức năng và phi chức năng.
+Xác định các tác nhân (actors) và các tương tác chính trong hệ thống.
+Xây dựng biểu đồ Use Case, biểu đồ Lớp, biểu đồ Hoạt Động, biểu đồ Giao Tiếp, biểu đồ Trạng Thái, biểu đồ Trình Tự và các mô hình UML khác.
+Phân tích luồng xử lý của các chức năng như đặt xe, thanh toán, quản lý chuyến đi và trợ lý AI.
+Phương pháp này giúp đảm bảo hệ thống được phát triển phù hợp với nghiệp vụ thực tế và đáp ứng đúng nhu cầu người dùng.
+1.6.3. Phương pháp mô hình hóa và thiết kế
+Dựa trên kết quả phân tích, nhóm sử dụng các phương pháp mô hình hóa để thiết kế cấu trúc hệ thống:
+Thiết kế kiến trúc tổng thể giữa frontend – backend – database.
+Thiết kế giao diện người dùng trên nền tảng Android bằng Jetpack Compose. 
+Thiết kế RESTful API phục vụ giao tiếp dữ liệu. 
+Thiết kế cơ sở dữ liệu quan hệ bằng MySQL Server. 
+Thiết kế luồng xử lý đặt xe, quản lý chuyến đi và tích hợp trợ lý AI. 
+Thiết kế giao diện bản đồ và định vị vị trí bằng Google Maps API.
+Mục tiêu của phương pháp này là đảm bảo hệ thống có tính mở rộng, ổn định và dễ bảo trì trong tương lai.
+1.6.4. Phương pháp thực nghiệm
+Đây là phương pháp chính để hiện thực hóa hệ thống:
+Xây dựng giao diện ứng dụng Android bằng Kotlin và Jetpack Compose. 
+Phát triển backend bằng PHP kết hợp MySQL Server. 
+Xây dựng RESTful API kết nối giữa frontend và backend. 
+Tích hợp Google Maps API phục vụ định vị và theo dõi hành trình. 
+Xây dựng các chức năng đặt xe, quản lý chuyến đi, thanh toán, đánh giá tài xế và hỗ trợ khách hàng. 
+Tích hợp trợ lý du lịch AI nhằm hỗ trợ người dùng tìm kiếm thông tin và gợi ý địa điểm phù hợp.
+Phương pháp thực nghiệm giúp kiểm chứng tính khả thi của mô hình hệ thống đã thiết kế và đánh giá hiệu quả hoạt động của ứng dụng trong thực tế.
+1.6.5. Phương pháp kiểm thử
+Để đánh giá chất lượng hệ thống, nhóm áp dụng:
+Kiểm thử chức năng (Functional Testing). 
+Kiểm thử giao diện và trải nghiệm người dùng (UI/UX Testing). 
+Kiểm thử API và khả năng xử lý dữ liệu. 
+ Kiểm thử hiệu năng và độ ổn định của hệ thống. 
+ Kiểm thử định vị và hiển thị bản đồ. 
+ Kiểm thử bảo mật cơ bản ở mức ứng dụng.
+Kết quả kiểm thử giúp phát hiện lỗi, tối ưu hiệu suất và nâng cao trải nghiệm người dùng trước khi hoàn thiện hệ thống.
+1.6.6. Phương pháp đánh giá và hoàn thiện
+Sau khi triển khai và kiểm thử, nhóm tiến hành:
+Đánh giá mức độ đáp ứng yêu cầu của hệ thống. 
+Đối chiếu kết quả đạt được với mục tiêu ban đầu của đề tài. 
+Đánh giá tính ổn định và khả năng hoạt động của ứng dụng. 
+ Ghi nhận những hạn chế còn tồn tại trong hệ thống. 
+ Đề xuất các hướng phát triển và mở rộng trong tương lai như tích hợp thanh toán điện tử, AI cá nhân hóa hoặc theo dõi vị trí thời gian thực nâng cao.
+1.7. Bố cục của báo cáo
+Sau phần Mở đầu, nội dung báo cáo được tổ chức thành năm chương chính. Chương 1 trình bày tổng quan về đề tài, bối cảnh thực hiện, cơ sở lý luận, công nghệ sử dụng và mục tiêu nghiên cứu của hệ thống. Đây là nền tảng giúp định hướng cho toàn bộ quá trình triển khai đề tài.
+Chương 2 tập trung nghiên cứu tổng quan về các hệ thống đặt xe trực tuyến, ứng dụng du lịch thông minh và các công nghệ liên quan như Kotlin, Jetpack Compose, RESTful API, Google Maps API và trí tuệ nhân tạo. Đồng thời, chương này cũng phân tích một số mô hình và giải pháp hiện có nhằm lựa chọn hướng triển khai phù hợp cho đề tài.
+Chương 3 trình bày quá trình phân tích và thiết kế hệ thống, bao gồm xác định yêu cầu chức năng, yêu cầu phi chức năng, xây dựng các sơ đồ UML và thiết kế cơ sở dữ liệu cho hệ thống.
+Chương 4 mô tả quá trình triển khai xây dựng hệ thống, bao gồm phát triển giao diện ứng dụng Android, xây dựng backend bằng PHP, tổ chức cơ sở dữ liệu MySQL và triển khai các chức năng chính như đặt xe, quản lý chuyến đi, theo dõi hành trình và trợ lý du lịch AI.
+Cuối cùng, Chương 5 tổng kết các kết quả đạt được trong quá trình thực hiện đề tài, đánh giá ưu điểm, hạn chế còn tồn tại và đề xuất các hướng phát triển trong tương lai nhằm hoàn thiện hệ thống tốt hơn.
+1.8. Kết luận chương 1
+Trong chương này, nhóm đã trình bày tổng quan về bối cảnh, ý nghĩa và sự cần thiết của đề tài “Xây dựng hệ thống đặt xe thông minh kết hợp trợ lý du lịch AI trên nền tảng di động”. Đồng thời, chương cũng giới thiệu các khái niệm cơ sở, công nghệ sử dụng, mục tiêu nghiên cứu, nội dung thực hiện và phương pháp triển khai hệ thống.
+Những nội dung được trình bày trong chương là cơ sở quan trọng cho việc phân tích, thiết kế và triển khai hệ thống ở các chương tiếp theo, đồng thời giúp định hình rõ hướng phát triển và phạm vi nghiên cứu của đề tài.
+CHƯƠNG 2. NGHIÊN CỨU TỔNG QUAN
+Ở phần này trình bày cơ sở lý thuyết, các mô hình và phương pháp đã được nghiên cứu nhằm phục vụ quá trình phân tích, thiết kế và phát triển hệ thống đặt xe thông minh kết hợp trợ lý du lịch AI trên nền tảng di động. Thông qua việc tổng hợp các kiến thức liên quan đến hệ thống đặt xe, ứng dụng di động, bản đồ số, trí tuệ nhân tạo, mô hình Client–Server và các phương pháp thiết kế hệ thống, chương cung cấp nền tảng khoa học giúp định hướng giải pháp phù hợp cho đề tài.
+2.1. Các phương pháp và mô hình nghiên cứu liên quan
+2.1.1. Mô hình phát triển phần mềm hướng chức năng 
+Phương pháp hướng chức năng là cách tiếp cận truyền thống trong phân tích hệ thống, tập trung vào việc xác định các chức năng chính mà hệ thống cần thực hiện. Đối với đề tài này, các chức năng có thể bao gồm: đăng ký, đăng nhập, đặt xe, theo dõi hành trình, thanh toán, đánh giá chuyến đi, hỗ trợ khách hàng và sử dụng trợ lý du lịch AI.
+*Đặc điểm:
+Tập trung vào các chức năng nghiệp vụ của hệ thống. 
+Dễ xác định luồng xử lý chính của từng chức năng. 
+Phù hợp với việc mô tả quy trình đặt xe từ lúc khách hàng chọn điểm đi, điểm đến cho đến khi hoàn tất chuyến đi. 
+Giúp nhóm phát triển dễ chia nhỏ hệ thống thành từng module để thiết kế và cài đặt.
+2.1.2. Mô hình hướng đối tượng (Object-Oriented Approach)
+Phương pháp hướng đối tượng là phương pháp phổ biến trong phân tích và thiết kế phần mềm hiện đại. Phương pháp này xem hệ thống như tập hợp các đối tượng có thuộc tính và hành vi riêng.
+Trong đề tài, các đối tượng chính có thể bao gồm:
+Người dùng 
+Khách hàng 
+Tài xế 
+Chuyến đi 
+Thanh toán 
+Hóa đơn 
+Đánh giá 
+Báo cáo 
+Yêu cầu hỗ trợ 
+Trợ lý du lịch AI
+Phương pháp này thường sử dụng các biểu đồ UML như:
+Use Case Diagram 
+Activity Diagram 
+Class Diagram 
+Sequence Diagram 
+State Diagram
+*Ưu điểm:
+Mô tả rõ mối quan hệ giữa các tác nhân và chức năng. 
+Phù hợp với hệ thống có nhiều vai trò như khách hàng, tài xế, chủ doanh nghiệp, nhân viên tư vấn, nhân viên quản lý người dùng và nhân viên quản lý doanh thu. 
+Giúp phân tích rõ vòng đời của các đối tượng như chuyến đi, thanh toán, hóa đơn, đánh giá và báo cáo. 
+Hỗ trợ tốt cho việc thiết kế hệ thống có khả năng mở rộng.
+2.1.3. Mô hình kiến trúc Client–Server và RESTful API
+2.1.3.1. Mô hình Client–Server
+Mô hình Client–Server là mô hình phổ biến trong các ứng dụng di động và hệ thống trực tuyến. Trong đề tài này, hệ thống có thể được chia thành các thành phần chính:
+Client: Ứng dụng di động dành cho khách hàng, tài xế và các nhóm người dùng liên quan. 
+Server: Hệ thống backend xử lý nghiệp vụ đặt xe, quản lý người dùng, thanh toán, báo cáo và trợ lý AI. 
+Database: Cơ sở dữ liệu lưu trữ thông tin người dùng, chuyến đi, tài xế, hóa đơn, thanh toán, đánh giá và báo cáo. 
+Dịch vụ bản đồ: Hỗ trợ định vị, chỉ đường và theo dõi hành trình. 
+Dịch vụ AI: Hỗ trợ gợi ý du lịch, tư vấn điểm đến, lịch trình và thông tin liên quan.
+*Ưu điểm:
+Tách bạch giữa giao diện người dùng và xử lý nghiệp vụ. 
+Dễ mở rộng khi số lượng người dùng tăng. 
+Có thể phát triển riêng ứng dụng cho khách hàng, tài xế và quản trị. 
+Hỗ trợ tích hợp với bản đồ, thanh toán trực tuyến và AI.
+2.1.3.2. RESTful API
+RESTful API là phương thức giao tiếp giữa frontend và backend thông qua giao thức HTTP. Trong hệ thống đặt xe thông minh, RESTful API được sử dụng để trao đổi dữ liệu giữa ứng dụng di động và máy chủ.
+Một số phương thức phổ biến:
+GET: Lấy dữ liệu người dùng, chuyến đi, lịch sử đặt xe, báo cáo. 
+POST: Tạo tài khoản, tạo chuyến đi, gửi đánh giá, gửi yêu cầu hỗ trợ. 
+PUT/PATCH: Cập nhật thông tin cá nhân, cập nhật trạng thái chuyến đi, cập nhật trạng thái thanh toán. 
+DELETE: Xóa dữ liệu không còn sử dụng hoặc hủy một số thông tin theo quyền hạn.
+RESTful API giúp các thành phần của hệ thống hoạt động độc lập, dễ bảo trì và có thể mở rộng sang nhiều nền tảng khác nhau như mobile app, web admin hoặc hệ thống quản trị nội bộ.
+2.1.4. Các công nghệ liên quan đến phát triển ứng dụng
+2.1.4.1. Ứng dụng di động
+Ứng dụng di động là nền tảng chính để người dùng tương tác với hệ thống. Khách hàng có thể đặt xe, theo dõi hành trình, thanh toán và nhận gợi ý du lịch. Tài xế có thể nhận chuyến, cập nhật trạng thái và quản lý lịch sử chuyến đi.
+Ứng dụng di động cần đảm bảo:
+Giao diện thân thiện, dễ sử dụng. 
+Hỗ trợ định vị vị trí hiện tại. 
+Hiển thị bản đồ và lộ trình di chuyển. 
+Cập nhật trạng thái chuyến đi theo thời gian thực. 
+Hỗ trợ thông báo cho khách hàng và tài xế.
+2.1.4.2. Bản đồ số và định vị GPS
+Bản đồ số và GPS là thành phần quan trọng trong hệ thống đặt xe. Chức năng này giúp xác định vị trí khách hàng, vị trí tài xế, điểm đón, điểm đến và lộ trình di chuyển.
+Vai trò chính:
+Xác định vị trí hiện tại của khách hàng và tài xế. 
+Tính toán khoảng cách giữa điểm đón và điểm đến. 
+Hiển thị hành trình trên bản đồ. 
+Theo dõi quá trình di chuyển của chuyến đi. 
+Hỗ trợ tài xế tìm đường tối ưu.
+2.1.4.3. Trí tuệ nhân tạo trong trợ lý du lịch
+Trí tuệ nhân tạo được sử dụng để xây dựng trợ lý du lịch AI nhằm hỗ trợ khách hàng trong quá trình tìm kiếm thông tin và lập kế hoạch chuyến đi.
+Các chức năng có thể có:
+Gợi ý địa điểm du lịch phù hợp. 
+Tư vấn lịch trình theo thời gian, sở thích và ngân sách. 
+Gợi ý nhà hàng, khách sạn, điểm tham quan gần vị trí người dùng. 
+Trả lời câu hỏi của khách hàng về du lịch. 
+Hỗ trợ cá nhân hóa trải nghiệm người dùng.
+Việc tích hợp AI giúp hệ thống không chỉ dừng lại ở chức năng đặt xe mà còn trở thành một nền tảng hỗ trợ du lịch thông minh.
+2.1.4.4. Cơ sở dữ liệu
+Cơ sở dữ liệu dùng để lưu trữ và quản lý toàn bộ thông tin của hệ thống.
+Một số nhóm dữ liệu chính:
+Người dùng 
+Tài xế 
+Chuyến đi 
+Thanh toán 
+Hóa đơn 
+Đánh giá 
+Hỗ trợ khách hàng 
+Báo cáo doanh thu 
+Lịch sử hoạt động 
+Dữ liệu gợi ý du lịch
+Cơ sở dữ liệu cần đảm bảo tính toàn vẹn, bảo mật và khả năng truy xuất nhanh để phục vụ các nghiệp vụ trong thời gian thực.
+2.1.5. Mô hình dịch vụ đặt xe trực tuyến kết hợp du lịch thông minh
+Hệ thống thuộc mô hình dịch vụ số, trong đó khách hàng sử dụng ứng dụng để đặt xe và nhận hỗ trợ du lịch. Mô hình này kết hợp giữa dịch vụ vận chuyển và dịch vụ tư vấn du lịch thông minh.
+Các đặc điểm chính:
+Khách hàng đặt xe thông qua ứng dụng. 
+Tài xế tiếp nhận và xử lý chuyến đi. 
+Hệ thống hỗ trợ theo dõi hành trình. 
+Người dùng có thể thanh toán trực tuyến hoặc theo phương thức được hỗ trợ. 
+Khách hàng có thể đánh giá chuyến đi. 
+Trợ lý AI hỗ trợ gợi ý điểm đến và lịch trình du lịch. 
+Chủ doanh nghiệp và nhân viên quản lý có thể theo dõi doanh thu, người dùng và báo cáo.
+Mô hình này phù hợp với xu hướng phát triển các nền tảng di động thông minh, nơi người dùng không chỉ cần di chuyển mà còn cần được hỗ trợ trong toàn bộ hành trình du lịch.
+2.2. Phân tích yêu cầu
+Phần này trình bày các yêu cầu chức năng và phi chức năng của hệ thống nhằm đảm bảo ứng dụng đáp ứng đúng mục tiêu sử dụng của từng nhóm đối tượng: khách hàng, tài xế, chủ doanh nghiệp, nhân viên tư vấn, nhân viên quản lý người dùng và nhân viên quản lý doanh thu. Các yêu cầu được phân tích dựa trên đặc điểm hoạt động của mô hình đặt xe trực tuyến kết hợp trợ lý du lịch AI.
+2.2.1. Yêu cầu đối với khách hàng
+Khách hàng là nhóm người dùng chính của hệ thống, có thể sử dụng ứng dụng để đăng ký tài khoản, đặt xe, theo dõi chuyến đi, thanh toán, đánh giá và sử dụng trợ lý du lịch AI.
+2.2.1.1. Chức năng không cần đăng nhập
+Xem màn hình giới thiệu ứng dụng. 
+Xem thông tin tổng quan về dịch vụ. 
+Xem một số thông tin cơ bản về điểm đến hoặc dịch vụ hỗ trợ. 
+Truy cập chức năng đăng ký hoặc đăng nhập.
+2.2.1.2. Chức năng khi đăng ký/đăng nhập
+Đăng ký tài khoản mới. 
+Đăng nhập bằng số điện thoại, email hoặc tài khoản đã đăng ký. 
+Quên mật khẩu và khôi phục tài khoản bằng OTP. 
+Cập nhật thông tin cá nhân. 
+Quản lý thông tin liên hệ. 
+Liên kết tài khoản với các dịch vụ hỗ trợ nếu có.
+2.2.1.3. Chức năng đặt xe
+Nhập điểm đón và điểm đến. 
+Xem khoảng cách và chi phí dự kiến. 
+Gửi yêu cầu đặt xe. 
+Theo dõi trạng thái tìm tài xế. 
+Xem thông tin tài xế và phương tiện. 
+Hủy chuyến trong trường hợp cần thiết. 
+Theo dõi hành trình trên bản đồ. 
+Hoàn tất chuyến đi.
+2.2.1.4. Chức năng thanh toán và hóa đơn
+Chọn phương thức thanh toán. 
+Thanh toán sau khi kết thúc chuyến đi. 
+Xem trạng thái thanh toán. 
+Xem hóa đơn chuyến đi. 
+Xem lịch sử thanh toán. 
+Gửi phản hồi khi có lỗi thanh toán.
+2.2.1.5. Chức năng đánh giá và phản hồi
+Đánh giá tài xế sau chuyến đi. 
+Gửi nhận xét về chất lượng dịch vụ. 
+Gửi phản hồi hoặc khiếu nại. 
+Theo dõi trạng thái xử lý hỗ trợ.
+2.2.1.6. Chức năng trợ lý du lịch AI
+Hỏi đáp thông tin du lịch. 
+Gợi ý địa điểm tham quan. 
+Gợi ý lịch trình theo thời gian và ngân sách. 
+Gợi ý dịch vụ gần vị trí hiện tại. 
+Hỗ trợ khách hàng lựa chọn điểm đến phù hợp.
+2.2.2. Yêu cầu đối với tài xế
+Tài xế là người trực tiếp tiếp nhận và thực hiện chuyến đi. Hệ thống cần cung cấp các chức năng giúp tài xế quản lý chuyến đi hiệu quả.
+Các chức năng chính:
+Đăng nhập vào ứng dụng tài xế. 
+Cập nhật trạng thái hoạt động. 
+Nhận yêu cầu chuyến đi. 
+Chấp nhận hoặc từ chối chuyến đi. 
+Xem điểm đón và điểm đến. 
+Di chuyển đến điểm đón khách. 
+Bắt đầu chuyến đi. 
+Kết thúc chuyến đi. 
+Xem lịch sử chuyến đi. 
+Xem thu nhập từ các chuyến đã hoàn thành. 
+Nhận đánh giá từ khách hàng. 
+Gửi yêu cầu hỗ trợ khi có sự cố.
+2.2.3. Yêu cầu đối với chủ doanh nghiệp
+Chủ doanh nghiệp là người có quyền quản lý tổng thể hệ thống, theo dõi hoạt động kinh doanh và đánh giá hiệu quả vận hành.
+2.2.3.1. Dashboard quản trị
+Xem tổng quan số lượng chuyến đi. 
+Xem tổng doanh thu. 
+Xem số lượng khách hàng và tài xế. 
+Xem thống kê chuyến đi theo ngày, tuần, tháng. 
+Xem biểu đồ doanh thu. 
+Xem báo cáo từ nhân viên quản lý doanh thu. 
+Xem báo cáo từ nhân viên quản lý người dùng. 
+Theo dõi các cảnh báo bất thường trong hệ thống.
+2.2.3.2. Quản lý hoạt động hệ thống
+Theo dõi tình trạng hoạt động của tài xế. 
+Theo dõi số lượng chuyến đang diễn ra. 
+Kiểm tra phản hồi và đánh giá của khách hàng. 
+Xem danh sách sự cố hoặc yêu cầu hỗ trợ. 
+Đưa ra quyết định điều hành dựa trên báo cáo.
+2.2.4. Yêu cầu đối với nhân viên tư vấn
+Nhân viên tư vấn chịu trách nhiệm hỗ trợ khách hàng trong quá trình sử dụng dịch vụ.
+Các chức năng chính:
+Tiếp nhận yêu cầu hỗ trợ từ khách hàng. 
+Tư vấn thông tin về dịch vụ đặt xe. 
+Hỗ trợ xử lý sự cố trong chuyến đi. 
+Hỗ trợ các vấn đề liên quan đến thanh toán. 
+Ghi nhận phản hồi và khiếu nại. 
+Cập nhật trạng thái xử lý yêu cầu hỗ trợ. 
+Chuyển yêu cầu cho bộ phận liên quan khi cần thiết.
+2.2.5. Yêu cầu đối với nhân viên quản lý nhân sự và người dùng
+Nhân viên quản lý nhân sự và người dùng có nhiệm vụ quản lý thông tin tài khoản, khách hàng, tài xế và nhân sự trong hệ thống.
+Các chức năng chính:
+Xem danh sách người dùng. 
+Xem danh sách tài xế. 
+Thêm, sửa, khóa hoặc mở khóa tài khoản. 
+Cập nhật thông tin tài xế. 
+Kiểm tra trạng thái hoạt động của tài khoản. 
+Quản lý hồ sơ nhân sự liên quan. 
+Gửi báo cáo quản lý người dùng cho chủ doanh nghiệp.
+2.2.6. Yêu cầu đối với nhân viên quản lý doanh thu
+Nhân viên quản lý doanh thu chịu trách nhiệm theo dõi, tổng hợp và báo cáo tình hình tài chính của hệ thống.
+Các chức năng chính:
+Xem danh sách giao dịch. 
+Theo dõi doanh thu từ các chuyến đi. 
+Kiểm tra trạng thái thanh toán. 
+Thống kê doanh thu theo ngày, tuần, tháng, năm. 
+Phân tích doanh thu theo tài xế hoặc khu vực. 
+Kiểm tra các giao dịch bất thường. 
+Lập báo cáo doanh thu. 
+Gửi báo cáo cho chủ doanh nghiệp.
+2.2.7. Yêu cầu phi chức năng
+2.2.7.1. Tính bảo mật
+Mật khẩu người dùng cần được mã hóa. 
+Phân quyền rõ ràng giữa khách hàng, tài xế, nhân viên và chủ doanh nghiệp. 
+Bảo vệ API quản trị khỏi truy cập trái phép. 
+Bảo mật thông tin cá nhân và dữ liệu thanh toán. 
+Kiểm soát đăng nhập và phiên làm việc của người dùng.
+2.2.7.2. Tính khả dụng
+Giao diện trực quan, dễ sử dụng. 
+Ứng dụng hoạt động ổn định trên nhiều thiết bị di động. 
+Các thao tác đặt xe, thanh toán và theo dõi hành trình cần đơn giản. 
+Hỗ trợ người dùng nhanh chóng khi gặp sự cố.
+2.2.7.3. Tính hiệu năng
+Hệ thống phản hồi nhanh khi đặt xe. 
+Cập nhật vị trí và trạng thái chuyến đi kịp thời. 
+Tìm kiếm tài xế phù hợp trong thời gian ngắn. 
+Xử lý nhiều người dùng truy cập cùng lúc. 
+Tối ưu truy vấn dữ liệu lịch sử chuyến đi và doanh thu.
+2.2.7.4. Tính toàn vẹn dữ liệu
+Dữ liệu chuyến đi phải được lưu đầy đủ. 
+Trạng thái thanh toán phải chính xác. 
+Hóa đơn phải khớp với chuyến đi và giao dịch. 
+Các thao tác cập nhật người dùng, tài xế và doanh thu cần có lưu vết. 
+Dữ liệu báo cáo phải phản ánh đúng hoạt động thực tế của hệ thống.
+2.2.7.5. Tính mở rộng
+Hệ thống có thể mở rộng thêm nhiều loại phương tiện. 
+Có thể tích hợp thêm nhiều cổng thanh toán. 
+Có thể phát triển thêm phiên bản web quản trị. 
+Có thể mở rộng trợ lý AI để hỗ trợ nhiều địa phương và nhiều loại hình du lịch hơn. 
+2.3. Hạn chế của các phương pháp
+2.3.1. Hạn chế của phương pháp hướng chức năng
+Chưa mô tả tốt mối quan hệ giữa các thực thể như khách hàng, tài xế, chuyến đi, thanh toán và hóa đơn. 
+Khó thể hiện vòng đời phức tạp của chuyến đi. 
+Không phù hợp nếu hệ thống mở rộng nhiều vai trò người dùng. 
+Khó kiểm soát khi hệ thống có thêm các chức năng AI, bản đồ và báo cáo.
+2.3.2. Hạn chế của mô hình hướng đối tượng
+Cần thời gian phân tích kỹ để xác định đúng các lớp và quan hệ. 
+Yêu cầu nhóm thực hiện phải nắm vững UML. 
+Nếu mô hình hóa chưa chính xác, quá trình thiết kế cơ sở dữ liệu và lập trình sẽ gặp khó khăn. 
+Với hệ thống có nhiều đối tượng trạng thái như chuyến đi, thanh toán, hỗ trợ và báo cáo, việc thiết kế cần được thực hiện cẩn thận.
+2.3.3. Hạn chế của mô hình Client–Server khi triển khai thực tế
+Nếu API không tối ưu, tốc độ phản hồi khi đặt xe có thể chậm. 
+Cần xử lý tốt bảo mật, xác thực và phân quyền. 
+Việc cập nhật vị trí thời gian thực yêu cầu hệ thống có khả năng xử lý ổn định. 
+Cần đảm bảo server hoạt động liên tục để tránh gián đoạn dịch vụ.
+2.3.4. Hạn chế của công nghệ bản đồ và định vị
+Độ chính xác GPS có thể bị ảnh hưởng bởi môi trường, thiết bị hoặc kết nối mạng. 
+Việc tính toán lộ trình phụ thuộc vào dịch vụ bản đồ được tích hợp. 
+Nếu kết nối Internet yếu, việc theo dõi hành trình có thể bị chậm. 
+Chi phí tích hợp bản đồ có thể tăng nếu hệ thống có nhiều người dùng.
+2.3.5. Hạn chế của trợ lý du lịch AI
+Kết quả gợi ý phụ thuộc vào chất lượng dữ liệu đầu vào. 
+AI có thể đưa ra gợi ý chưa phù hợp nếu thiếu ngữ cảnh người dùng. 
+Cần kiểm soát nội dung phản hồi để tránh thông tin sai lệch. 
+Việc tích hợp AI làm tăng độ phức tạp của hệ thống. 
+Cần có cơ chế cập nhật dữ liệu du lịch thường xuyên để kết quả tư vấn chính xác hơn. 
+2.4. Kết luận chương 2
+Chương 2 đã trình bày tổng quan các mô hình, công nghệ và phương pháp tiếp cận liên quan đến việc xây dựng hệ thống đặt xe thông minh kết hợp trợ lý du lịch AI trên nền tảng di động. Qua quá trình nghiên cứu, có thể thấy rằng mô hình hướng đối tượng kết hợp kiến trúc Client–Server, RESTful API, bản đồ số, định vị GPS và trí tuệ nhân tạo là lựa chọn phù hợp cho đề tài.
+Các phương pháp và công nghệ được nghiên cứu giúp hệ thống đáp ứng các yêu cầu quan trọng như đặt xe, theo dõi hành trình, thanh toán, quản lý người dùng, quản lý doanh thu, hỗ trợ khách hàng và gợi ý du lịch thông minh. Bên cạnh đó, chương cũng chỉ ra một số hạn chế cần lưu ý trong quá trình triển khai như bảo mật, hiệu năng, độ chính xác định vị, chất lượng dữ liệu AI và khả năng mở rộng hệ thống.
+Những kết quả nghiên cứu trong chương này là cơ sở quan trọng để tiến hành phân tích và thiết kế hệ thống ở Chương 3.
+CHƯƠNG 3. PHÂN TÍCH VÀ THIẾT KẾ HỆ THỐNG
+Ở chương này trình bày quá trình phân tích yêu cầu, mô hình hóa nghiệp vụ và thiết kế các thành phần của hệ thống đặt xe thông minh kết hợp trợ lý du lịch AI trên nền tảng di động. Thông qua việc phân tích tác nhân, xác định chức năng, mô tả luồng xử lý và thiết kế cơ sở dữ liệu, chương đóng vai trò quan trọng trong việc định hình kiến trúc tổng thể của hệ thống trước khi tiến hành triển khai thực tế ở Chương 4.
+3.1. Giới thiệu chung
+Việc phân tích và thiết kế hệ thống đóng vai trò quan trọng trong quá trình phát triển ứng dụng đặt xe thông minh. Đây là giai đoạn giúp xác định đầy đủ các chức năng nghiệp vụ, luồng xử lý dữ liệu và mối quan hệ giữa các thành phần trong hệ thống.
+Hệ thống được xây dựng nhằm hỗ trợ người dùng đặt xe nhanh chóng, theo dõi hành trình trực tiếp trên bản đồ, thanh toán trực tuyến và sử dụng trợ lý AI để hỗ trợ gợi ý du lịch. Ngoài ra, hệ thống còn hỗ trợ quản lý tài xế, doanh thu và chăm sóc khách hàng một cách hiệu quả.
+Các mô hình được sử dụng bao gồm:
+Sơ đồ Use Case 
+Sơ đồ lớp (Class Diagram) 
+Sơ đồ hoạt động (Activity Diagram) 
+Sơ đồ trạng thái (State Diagram) 
+Sơ đồ giao tiếp (Communication Diagram) 
+Sơ đồ trình tự (Sequence Diagram)
+Các biểu đồ này giúp mô tả trực quan hoạt động của hệ thống, đồng thời hỗ trợ việc triển khai frontend, backend và cơ sở dữ liệu được thống nhất và hiệu quả hơn.
+3.2. Phân tích hệ thống
+3.2.1. Các tác nhân (Actors)
+Dựa trên yêu cầu nghiệp vụ của hệ thống đặt xe thông minh kết hợp trợ lý du lịch AI, các tác nhân chính bao gồm:
+3.2.1.1. Khách hàng
+Khách hàng là người sử dụng ứng dụng để đặt xe và sử dụng các dịch vụ du lịch thông minh.
+Các chức năng chính:
+Đăng ký tài khoản 
+Đăng nhập hệ thống 
+Đặt xe 
+Theo dõi hành trình trên bản đồ 
+Thanh toán chuyến đi 
+Xem lịch sử chuyến đi 
+Đánh giá tài xế 
+Sử dụng trợ lý AI du lịch 
+Quản lý thông tin cá nhân 
+Gửi yêu cầu hỗ trợ
+3.2.1.2. Tài xế
+Tài xế là người tiếp nhận và thực hiện các chuyến đi từ khách hàng.
+Các chức năng chính:
+Đăng nhập hệ thống 
+Nhận chuyến xe 
+Xác nhận chuyến đi 
+Theo dõi vị trí khách hàng 
+Cập nhật trạng thái chuyến đi 
+Xem doanh thu cá nhân 
+Quản lý thông tin cá nhân
+3.2.1.3. Chủ doanh nghiệp
+Là người quản lý tổng thể hoạt động của hệ thống.
+Các chức năng chính:
+Theo dõi doanh thu hệ thống 
+Xem báo cáo thống kê 
+Quản lý tài xế 
+Quản lý khách hàng 
+Quản lý hoạt động hệ thống
+3.2.1.4. Nhân viên tư vấn
+Có nhiệm vụ hỗ trợ khách hàng trong quá trình sử dụng ứng dụng.
+Các chức năng:
+Tiếp nhận yêu cầu hỗ trợ 
+Phản hồi khách hàng 
+Hỗ trợ xử lý sự cố 
+Theo dõi lịch sử hỗ trợ
+3.2.1.5. Nhân viên quản lý nhân sự và người dùng
+Quản lý tài khoản và thông tin người dùng trong hệ thống.
+Các chức năng:
+Quản lý tài khoản khách hàng 
+Quản lý tài khoản tài xế 
+Khóa/mở tài khoản 
+Cập nhật thông tin người dùng
+3.2.1.6. Nhân viên quản lý doanh thu
+Quản lý các hoạt động liên quan đến thanh toán và doanh thu.
+Các chức năng:
+Quản lý giao dịch thanh toán 
+Theo dõi doanh thu 
+Quản lý hóa đơn 
+Xuất báo cáo thống kê
+3.2.2. Sơ đồ Use Case của hệ thống
+Sơ đồ Use Case mô tả mối quan hệ giữa các tác nhân và các chức năng của hệ thống.
+Hình 3.1 – Use Case : Tổng quan
+3.2.2.1. Use Case – Đăng nhập
+Hình 3.2 – Use Case : Đăng nhập
+3.2.2.2. Use Case – Đăng ký tài khoản
+Hình 3.3 – Use Case : Đăng ký tài khoản
+3.2.2.3. Use Case – Quên mật khẩu
+Hình 3.4 – Use Case : Quên mật khẩu
+3.2.2.4. Use Case – Đặt xe
+Hình 3.5 – Use Case : Đặt xe
+3.2.2.5. Use Case – Tiếp nhận và xử lí chuyến đi
+Hình 3.6 – Use Case : Tiếp nhận và xử lí chuyến đi
+3.2.2.6. Use Case – Theo dõi hành trình trên bản đồ
+Hình 3.7 – Use Case : Theo dõi hành trình trên bản đồ
+3.2.2.7. Use Case – Hỗ trợ khách hàng
+Hình 3.8 – Use Case : Hỗ trợ khách hàng
+3.2.2.8. Use Case – Đánh giá và phản hồi
+Hình 3.9 – Use Case : Đánh giá và phản hồi
+3.2.2.9. Use Case – Trợ lý du lịch AI
+Hình 3.10 – Use Case : Trợ lý du lịch AI
+3.2.2.10. Use Case – Quản lí thông tin cá nhân
+Hình 3.11 – Use Case : Quản lí thông tin cá nhân
+3.2.2.11. Use Case – Quản lí lịch sử chuyến đi
+Hình 3.12 – Use Case : Quản lí lịch sử chuyến đi
+3.2.2.12. Use Case – Quản lí hóa đơn và thanh toán
+Hình 3.13 – Use Case : Quản lí hóa đơn và thanh toán
+3.2.2.13. Use Case – Quản lí người dùng
+Hình 3.14 – Use Case : Quản lí người dùng
+3.2.2.14. Use Case – Quản lí doanh thu và thống kê
+Hình 3.15 – Use Case : Quản lí doanh thu và thống kê
+3.2.2.15. Use Case – Quản trị hệ thống
+Hình 3.16 – Use Case : Quản trị hệ thống
+3.3. Các mô hình nghiệp vụ
+3.3.1. Biểu đồ lớp (Class Diagram)
+Hình 3.17 – Biểu đồ lớp
+3.3.2. Biểu đồ hoạt động (Activity Diagram)
+3.3.2.1. Quy trình đăng nhập
+Hình 3.17 – Quy trình đăng nhập
+3.3.2.2. Quy trình đăng kí tài khoản
+Hình 3.18 – Quy trình đăng kí tài khoản
+3.3.2.3. Quy trình lấy lại mật khẩu
+Hình 3.19 – Quy trình lấy lại mật khẩu
+3.3.2.4. Quy trình đặt xe
+Hình 3.20 – Quy trình đặt xe
+3.3.2.5. Quy trình khách hàng hủy chuyến đi
+Hình 3.21 – Quy trình khách hàng hủy chuyến đi
+3.3.2.6. Quy trình tài xế hủy chuyến đi
+Hình 3.22 – Quy trình tài xế hủy chuyến đi
+3.3.2.7. Quy trình tiếp nhận và xử lí chuyến đi
+Hình 3.23 – Quy trình tiếp nhận và xử lí chuyến đi
+3.3.2.8. Quy trình theo dõi hành trình trên bản đồ
+Hình 3.24 – Quy trình theo dõi hành trình trên bản đồ
+3.3.2.9. Quy trình hỗ trợ khách hàng
+Hình 3.25 – Quy trình hỗ trợ khách hàng
+3.3.2.10. Quy trình đánh giá và phản hồi
+Hình 3.26 – Quy trình đánh giá và phản hồi
+3.3.2.11. Quy trình sử dụng trợ lí AI du lịch
+Hình 3.27 – Quy trình sử dụng trợ lí AI du lịch
+3.3.2.12. Quy trình quản lí thông tin cá nhân
+Hình 3.28 – Quy trình quản lí thông tin cá nhân
+3.3.2.13. Quy trình liên kết tài khoản
+Hình 3.29 – Quy trình liên kết tài khoản
+3.3.2.14. Quy trình cập nhật thông tin cá nhân
+Hình 3.30 – Quy trình cập nhật thông tin cá nhân
+3.3.2.15. Quy trình thay đổi mật khẩu cho tài khoản
+Hình 3.31 – Quy trình thay đổi mật khẩu cho tài khoản
+3.3.2.16. Quy trình quản lí lịch sử chuyến đi
+Hình 3.32 – Quy trình quản lí lịch sử chuyến đi
+3.3.2.17. Quy trình quản lí hóa đơn và thanh toán
+Hình 3.33 – Quy trình quản lí hóa đơn và thanh toán
+3.3.2.18. Quy trình thanh toán trực tiếp
+Hình 3.34 – Quy trình thanh toán trực tiếp
+3.3.2.19. Quy trình thanh toán trực tuyến
+Hình 3.35 – Quy trình thanh toán trực tuyến
+3.3.2.20. Quy trình quản lí người dùng
+Hình 3.36 – Quy trình quản lí người dùng
+3.3.2.21. Quy trình tìm kiếm và lọc tài khoản
+Hình 3.37 – Quy trình tìm kiếm và lọc tài khoản
+3.3.2.22. Quy trình xem chi tiết thông tin người dùng
+Hình 3.38 – Quy trình xem chi tiết thông tin người dùng
+3.3.2.23. Quy trình thêm người dùng
+Hình 3.39 – Quy trình thêm người dùng
+3.3.2.24. Quy trình cập nhật thông tin người dùng
+Hình 3.40 – Quy trình cập nhật thông tin người dùng
+3.3.2.25. Quy trình xóa người dùng
+Hình 3.41 – Quy trình xóa người dùng
+3.3.2.26. Quy trình quản lí doanh thu và thống kê
+Hình 3.42 – Quy trình quản lí doanh thu và thống kê
+3.3.2.27. Quy trình quản lí khoản thu
+Hình 3.43 – Quy trình quản lí khoản thu
+3.3.2.28. Quy trình quản lí khoản chi
+Hình 3.44 – Quy trình quản lí khoản chi
+3.3.2.29. Quy trình xem tổng quan
+Hình 3.45 – Quy trình xem tổng quan
+3.3.2.30. Quy trình xem báo cáo
+Hình 3.46 – Quy trình xem báo cáo
+3.3.2.31. Quy trình lập báo cáo tài chính
+Hình 3.47 – Quy trình lập báo cáo tài chính
+3.3.2.32. Quy trình xem chi tiết báo cáo
+Hình 3.48 – Quy trình xem chi tiết báo cáo
+3.3.2.33. Quy trình gửi báo cáo
+Hình 3.49 – Quy trình gửi báo cáo
+3.3.2.34. Quy trình xóa báo cáo 
+Hình 3.50 – Quy trình xóa báo cáo
+3.3.3. Biểu đồ trạng thái (State Diagram)
+3.3.3.1. Trạng thái chuyến đi
+Hình 3.51 – Trạng thái chuyến đi
+3.3.3.2. Trạng thái của người dùng
+Hình 3.52 – Trạng thái của người dùng
+3.3.3.3. Trạng thái của tài xế
+Hình 3.53 – Trạng thái của tài xế
+3.3.3.4. Trạng thái thanh toán
+Hình 3.54 – Trạng thái thanh toán
+3.3.3.5. Trạng thái của hóa đơn
+Hình 3.55 – Trạng thái của hóa đơn
+3.3.3.6. Trạng thái đánh giá
+Hình 3.56 – Trạng thái đánh giá
+3.3.3.7. Trạng thái lấy lại mật khẩu
+Hình 3.57 – Trạng thái lấy lại mật khẩu
+3.3.3.8. Trạng thái liên kết tài khoản
+Hình 3.58 – Trạng thái liên kết tài khoản
+3.3.3.9. Trạng thái hỗ trợ
+Hình 3.59 – Trạng thái hỗ trợ
+3.3.3.10. Trạng thái báo cáo
+Hình 3.60 – Trạng thái báo cáo
+3.3.4. Biểu đồ giao tiếp (Communication Diagram)
+3.3.5. Biểu đồ trình tự (Sequence Diagram)
+3.4. Thiết kế kiến trúc hệ thống
+Hệ thống được thiết kế theo mô hình Client – Server, trong đó ứng dụng di động đóng vai trò là phía người dùng, backend đóng vai trò xử lý nghiệp vụ và cơ sở dữ liệu dùng để lưu trữ thông tin của hệ thống.
+Kiến trúc tổng thể của hệ thống gồm ba thành phần chính:
+Ứng dụng di động Android 
+Máy chủ backend xử lý API 
+Cơ sở dữ liệu MySQL 
+Mô hình này giúp hệ thống dễ triển khai, dễ bảo trì và phù hợp với quy mô của một đồ án cơ sở. Ứng dụng di động sẽ gửi yêu cầu đến backend thông qua API. Backend tiếp nhận yêu cầu, xử lý dữ liệu, truy vấn cơ sở dữ liệu và trả kết quả về cho ứng dụng dưới dạng JSON.
+3.4.1. Giao diện người dùng (Frontend) – Android Kotlin
+Giao diện người dùng của hệ thống được xây dựng trên nền tảng Android bằng ngôn ngữ lập trình Kotlin. Đây là phần trực tiếp tương tác với người dùng, bao gồm khách hàng, tài xế và các tài khoản quản lý trong hệ thống.
+Ứng dụng Android đảm nhiệm việc hiển thị giao diện, tiếp nhận thao tác của người dùng và gửi dữ liệu đến backend để xử lý.
+Các công nghệ sử dụng ở frontend gồm:
+Kotlin 
+Android Studio 
+Jetpack Compose hoặc XML Layout 
+Material Design 
+Retrofit 
+Google Maps API hoặc Map SDK 
+SharedPreferences hoặc DataStore 
+Các chức năng chính của frontend gồm:
+Đăng ký tài khoản 
+Đăng nhập hệ thống 
+Quên mật khẩu 
+Đặt xe 
+Theo dõi hành trình trên bản đồ 
+Quản lý thông tin cá nhân 
+Xem lịch sử chuyến đi 
+Thanh toán chuyến đi 
+Xem hóa đơn 
+Đánh giá chuyến đi 
+Gửi yêu cầu hỗ trợ 
+Sử dụng trợ lý du lịch AI 
+Frontend sử dụng Retrofit để gọi API từ backend. Dữ liệu trao đổi giữa ứng dụng và máy chủ được định dạng dưới dạng JSON, giúp quá trình truyền nhận dữ liệu đơn giản, rõ ràng và dễ xử lý.
+3.4.2. Backend – PHP
+Backend của hệ thống được xây dựng bằng PHP, đóng vai trò xử lý các nghiệp vụ chính của hệ thống. Backend tiếp nhận yêu cầu từ ứng dụng di động, kiểm tra dữ liệu, xử lý logic nghiệp vụ, làm việc với cơ sở dữ liệu và trả kết quả về cho frontend.
+Các chức năng chính của backend gồm:
+Xử lý đăng ký tài khoản 
+Xử lý đăng nhập 
+Kiểm tra thông tin người dùng 
+Quản lý khách hàng 
+Quản lý tài xế 
+Xử lý đặt xe 
+Cập nhật trạng thái chuyến đi 
+Quản lý thanh toán 
+Quản lý hóa đơn 
+Lưu đánh giá chuyến đi 
+Quản lý yêu cầu hỗ trợ 
+Trả dữ liệu thống kê doanh thu 
+Xử lý dữ liệu phục vụ trợ lý du lịch AI 
+Backend cung cấp các API để ứng dụng Android có thể gọi đến. Mỗi API tương ứng với một chức năng cụ thể của hệ thống, ví dụ như đăng nhập, đặt xe, lấy danh sách chuyến đi, cập nhật trạng thái thanh toán hoặc gửi đánh giá.
+Dữ liệu phản hồi từ backend được trả về dưới dạng JSON. Cách thiết kế này giúp frontend dễ dàng nhận dữ liệu và hiển thị lên giao diện người dùng.
+3.4.3. Cơ sở dữ liệu – MySQL
+Cơ sở dữ liệu của hệ thống sử dụng MySQL để lưu trữ toàn bộ thông tin liên quan đến người dùng, tài xế, chuyến đi, thanh toán, hóa đơn, đánh giá và hỗ trợ khách hàng.
+MySQL phù hợp với hệ thống vì có khả năng lưu trữ dữ liệu quan hệ tốt, dễ sử dụng, dễ triển khai và phù hợp với quy mô đồ án.
+Các bảng dữ liệu chính gồm:
+3.4.4. Thiết kế API trao đổi dữ liệu
+Hệ thống sử dụng API để trao đổi dữ liệu giữa ứng dụng Android và backend PHP. Các API được xây dựng theo dạng request/response, trong đó frontend gửi yêu cầu lên server và backend trả kết quả về.
+Một số API chính của hệ thống gồm:
+3.4.5. Thiết kế bảo mật hệ thống
+Để đảm bảo an toàn cho hệ thống, một số giải pháp bảo mật cơ bản được áp dụng trong quá trình thiết kế.
+Các giải pháp gồm:
+Mã hóa mật khẩu người dùng trước khi lưu vào cơ sở dữ liệu 
+Kiểm tra dữ liệu đầu vào để tránh lỗi và dữ liệu không hợp lệ 
+Phân quyền tài khoản theo vai trò 
+Không cho phép người dùng truy cập chức năng ngoài quyền hạn 
+Kiểm tra trạng thái đăng nhập trước khi thực hiện chức năng quan trọng 
+Hạn chế trả về các thông tin nhạy cảm từ backend 
+Sử dụng mã phiên đăng nhập hoặc token để xác thực người dùng 
+Các nhóm quyền trong hệ thống gồm:
+Khách hàng 
+Tài xế 
+Nhân viên tư vấn 
+Nhân viên quản lý nhân sự và người dùng 
+Nhân viên quản lý doanh thu 
+Chủ doanh nghiệp 
+Quản trị viên 
+Việc phân quyền giúp hệ thống kiểm soát được chức năng mà từng người dùng được phép sử dụng, từ đó tăng tính an toàn và ổn định trong quá trình vận hành.
+3.5. Kết chương 3
+Chương 3 đã trình bày quá trình phân tích và thiết kế hệ thống đặt xe thông minh kết hợp trợ lý du lịch AI trên nền tảng di động. Nội dung chương bao gồm việc xác định kiến trúc hệ thống, thiết kế frontend, backend, cơ sở dữ liệu, API trao đổi dữ liệu và các giải pháp bảo mật cơ bản.
+Hệ thống được thiết kế theo mô hình Client – Server, trong đó frontend là ứng dụng Android sử dụng Kotlin, backend được xây dựng bằng PHP và cơ sở dữ liệu sử dụng MySQL. Cách thiết kế này phù hợp với quy mô của đồ án, đảm bảo hệ thống có thể triển khai các chức năng chính như đặt xe, theo dõi hành trình, thanh toán, đánh giá, hỗ trợ khách hàng và trợ lý du lịch AI.
+Những nội dung phân tích và thiết kế ở chương này là cơ sở quan trọng để tiến hành xây dựng, lập trình và triển khai hệ thống trong Chương 4.
+VIẾT TẮT | NỘI DUNG
+AI | Artificial Intelligence
+GPS | Global Positioning System
+API | Application Programming Interface
+RESTful API | Representational State Transfer Application Programming Interface
+UI | User Interface
+UX | User Experience
+UI/UX | User Interface / User Experience
+PHP | Hypertext Preprocessor
+MySQL | My Structured Query Language
+UML | Unified Modeling Language
+JSON | JavaScript Object Notation
+Android SDK | Android Software Development Kit
+IDE | Integrated Development Environment
+HTTP | HyperText Transfer Protocol
+REST | Representational State Transfer
+GET | GET Method
+POST | POST Method
+PUT | PUT Method
+PATCH | PATCH Method
+DELETE | DELETE Method
+OTP | One-Time Password
+SQL | Structured Query Language
+XSS | Cross-Site Scripting
+PC | Personal Computer
+
+================================================================================
+FILE 2: Đề Cương Chi Tiết.docx
+================================================================================
+Thông tin người thực hiện:
+Tên đồ án: XÂY DỰNG HỆ THỐNG ĐẶT XE THÔNG MINH KẾT HỢP TRỢ LÝ DU LỊCH AI TRÊN NỀN TẢNG DI ĐỘNG
+Mô tả: 
+- Mô tả tổng quan đề tài :
+ Trong bối cảnh chuyển đổi số đang diễn ra mạnh mẽ, nhu cầu sử dụng các ứng dụng thông minh để hỗ trợ di chuyển và du lịch ngày càng gia tăng. Tuy nhiên, người dùng thường phải sử dụng nhiều ứng dụng khác nhau để đặt xe, tìm kiếm địa điểm và lên kế hoạch cho chuyến đi, gây bất tiện và mất thời gian. Vì vậy, đề tài “Xây dựng hệ thống đặt xe thông minh kết hợp trợ lý du lịch AI trên nền tảng di động” được thực hiện nhằm phát triển một ứng dụng tích hợp các chức năng đặt xe và hỗ trợ du lịch trên cùng một nền tảng. Hệ thống sử dụng trí tuệ nhân tạo để phân tích nhu cầu người dùng và đưa ra các gợi ý phù hợp về địa điểm tham quan, dịch vụ và lịch trình di chuyển. Giải pháp này giúp nâng cao trải nghiệm người dùng, tối ưu hóa việc di chuyển và góp phần thúc đẩy phát triển du lịch thông minh trong thời đại số.
+- Mục tiêu dự kiến sẽ đạt được : 
++ Xây dựng một ứng dụng di động cho phép người dùng đặt xe nhanh chóng và thuận tiện thông qua giao diện thân thiện, dễ sử dụng.
++ Tích hợp trợ lý du lịch AI có khả năng gợi ý các địa điểm tham quan, nhà hàng, khách sạn và lịch trình di chuyển phù hợp với nhu cầu của người dùng.
++ Ứng dụng công nghệ định vị GPS và bản đồ số để hỗ trợ tìm kiếm địa điểm, xác định vị trí và theo dõi hành trình di chuyển.
++ Xây dựng hệ thống có khả năng quản lý thông tin người dùng, lịch sử chuyến đi và dữ liệu đặt xe một cách hiệu quả.
++ Đề xuất một giải pháp góp phần nâng cao trải nghiệm du lịch và hướng tới mô hình du lịch thông minh trong bối cảnh chuyển đổi số hiện nay. 
+- Kết quả dự kiến đạt được :
+Sau khi hoàn thành đề tài, hệ thống dự kiến sẽ xây dựng được một ứng dụng di động đặt xe thông minh với các chức năng cơ bản như đăng ký, đăng nhập, đặt xe và theo dõi hành trình di chuyển của người dùng. Đồng thời, hệ thống sẽ tích hợp trợ lý du lịch AI có khả năng gợi ý các địa điểm tham quan, nhà hàng, khách sạn và hỗ trợ người dùng trong việc lên kế hoạch di chuyển phù hợp. Ứng dụng cũng tích hợp công nghệ bản đồ và định vị GPS để xác định vị trí, hiển thị tuyến đường và tìm kiếm các dịch vụ xung quanh. Bên cạnh đó, hệ thống sẽ xây dựng cơ sở dữ liệu để quản lý thông tin người dùng, chuyến đi và các dịch vụ liên quan một cách hiệu quả.
+ Kết quả của đề tài không chỉ là một sản phẩm ứng dụng hoàn chỉnh mà còn là nền tảng có thể tiếp tục phát triển và mở rộng trong các giải pháp giao thông và du lịch thông minh trong tương lai.
+Nội dung thực hiện: 
+1. Phân tích yêu cầu hệ thống : 
+- Xác định mục tiêu, phạm vi và đối tượng sử dụng của app mobile.
+- Phân tích các nghiệp vụ chính bao gồm: đặt xe (xe máy, ô tô bốn chỗ, ô tô bảy chỗ), quản lí tài khoản khách hàng, quản lí tài khoản nhân viên, quản lí thông tin chuyến đi, quản lí doanh thu, thống kê, tư vấn khách hàng và công nghệ AI thông minh về du lịch.
+- Xác định các vai trò người dung : 
++ Khác hàng : chọn chuyến đi, tìm tài xế, xem thông tin của tài xế được chọn, nhắn tin với nhân viên hỗ trợ, trả chi phí cho chuyến đi, lưu trữ chuyến đi của bản thân và sử dụng AI thông minh được tích hợp cho chuyến đi.
++ Tài xế : nhận chuyến đi gần nhất, nhận thanh toán trả phí.
++ Chủ doanh nghiệp : quản lý toàn hệ thống, quản lý khách hàng, quản lý nhân viên, quản lí doanh thu và xem chi tiết thống kê.
++ Nhân viên quản lý người dùng : quản lí nhân viên và quản lí khách hàng.
++ Nhân viên tư vấn : tư vấn chuyến đi cho khách hàng, phản hồi bình luận của khách hàng và hỗ trợ trực tuyến những vấn đề mà khách hàng gặp phải.
++ Nhân viên quản lí doanh thu : theo dõi, ghi nhận và thống kê tiền thu – chi của doanh nghiệp.
+2. Thiết kế hệ thống : 
+- Thiết kế kiến trúc tổng thể (frontend – backend – database).
+- Xây dựng sơ đồ use case, sơ đồ lớp, sơ đồ hoạt động và ERD cho cơ sở dữ liệu.
+- Thiết kế giao diện người dung (UI/UX) hiện đại, dễ sử dụng, mang phong cách đặc trưng của app mobile.
+Xây dựng chức năng :
+- Thanh điều hướng : hiển thị trang chủ và hiển thị chức năng của từng tài khoản sau khi đăng nhập.
+- Trang đăng nhập : hiển thị khung ghi cần nhập thông tin để đăng nhập, hiển thị đường dẫn cho việc “ quên mật khẩu “, hiển thị đường dẫn cho việc “ đăng ký “ và hiển thị thông báo “ đăng nhập thành công “ và “ đăng nhập thất bại “.
+- Trang quên mật khẩu : hiển thị phương thức để lấy lại mật khẩu và đảm bảo an toàn cho việc lấy lại mật khẩu.
+- Trang đăng ký : hiển thị khung ghi cần nhập thông tin để tạo tài khoản(tên người dùng, căn cước công dân, tên tài khoản, email và khung nhập mật khẩu mới).
+- Trang chủ : hiển thị tìm kiếm địa điểm đi đến và hiển thị loại xe cần đặt.
+- Trang bản đồ : hiển thị bản đồ, định vị tài khoản của người dùng, hiển thị hành trình đi, hiển thị thông tin người dùng và hiển thị hóa đơn.
+- Trang hóa đơn : hiển thị thông tin hóa đơn, hiển thị phương thức thanh toán và hiển thị nút bấm đặt xe.
+- Trang lịch sử chuyến đi : hiển thị chuyến đi đang diễn ra và hiển thị chuyến đi được lưu vào lịch sử của từng người dùng. 
+- Trang phần mềm AI : hiển thị chức năng của AI thông minh được tích hợp vào để giúp khách hàng trải nghiệm chuyến đi tốt hơn.
+- Trang tài khoản : hiển thị hình ảnh, tên tuổi, số điện thoại của người dùng và nút bấm để chỉnh sửa thông tin cá nhân.
+- Trang nhắn tin : nhắn tin để cần được hỗ trợ bởi nhân viên tư vấn.
+- Trang đánh giá chuyến đi : khách hàng bình luận và đánh giá cho chuyến đi của bản thân.
+- Trang quản lí người dùng : hiển thị các chức năng để quản lí và lưu trữ tài khoản của nhân viên, hiển thị các chức năng để quản lí và lưu trữ tài khoản của khách hàng và làm báo cáo gửi lên thống kê cho chủ doanh nghiệp.
+- Trang quản lí doanh thu : hiển thị các chức năng để quản doanh thu(theo ngày, tháng, năm), kiểm soát doanh thu(tiền cần trả của khách hàng xử dụng chuyến đi, tiền lương cho nhân viên) và làm báo cáo gửi lên thống kê cho chủ doanh nghiệp.
+- Trang thống kê : chủ doanh nghiệp nhận được các báo cáo và thống kê theo biểu đồ cột doanh thu theo ngày, tháng và năm.
+4. Xây dựng cơ sở dữ liệu : 
+- Tạo các bảng dữ liệu chính : Người dùng, Phương tiện, Chuyến đi, Hóa đơn, Doanh thu, Đánh giá chuyến đi và Tin nhắn hỗ trợ.
+- Thiết lập mối quan hệ giữa các bảng (1-nhiều, nhiều-nhiều).
+- Đảm bảo tính toàn vẹn, rang buộc và khả năng mở rộng dữ liệu.
+5. Kiểm thử, triển khai và đánh giá :
+- Kiểm thử các chức năng chính của hệ thống như đăng ký, đăng nhập, đặt xe, hiển thị bản đồ, gợi ý địa điểm du lịch AI, xem hóa đơn và quản lý tài khoản trên nhiều trình duyệt và thiết bị khác nhau.
+- Kiểm thử các chức năng quan trọng như đặt xe, hiển thị hành trình trên bản đồ, thanh toán hóa đơn, quản lý tài khoản người dùng và đảm bảo tính bảo mật của dữ liệu người dùng.
+- Triển khai hệ thống chạy thử trên môi trường localhost hoặc máy chủ hosting để kiểm tra khả năng hoạt động của ứng dụng trong thực tế.
+- Đánh giá hiệu năng của hệ thống thông qua tốc độ xử lý yêu cầu đặt xe, khả năng hiển thị bản đồ, tính ổn định của hệ thống và trải nghiệm người dùng khi sử dụng ứng dụng.
+6. Báo cáo và hoàng thiện : 
+- Tổng hợp kết quả thực hiện, viết báo cáo, minh họa bằng hình ảnh giao diện và sơ đồ hệ thống.
+- Đánh giá khả năng ứng dụng thực tế và đề xuất hướng phát triển trong tương lại (tích hợp thanh toán trực tuyến, phân tích hành vi khách hàng,...).
+Kế hoạch thực hiện:
+Lê Đăng Khoa
+Trần Nguyễn Tuấn Anh
+TRƯỜNG ĐẠI HỌC CÔNG NGHỆ THÔNG TIN
+VÀ TRUYỀN THÔNG VIỆT- HÀN
+KHOA KHOA HỌC MÁY TÍNH | CỘNG HOÀ XÃ HỘI CHỦ NGHĨA VIỆT NAM
+Độc lập - Tự do - Hạnh phúc
+               
+             Đà Nẵng, ngày 19 tháng 03 năm 2026
+ĐỀ CƯƠNG ĐỒ ÁN CƠ SỞ 3
+Họ và tên sinh viên: LÊ ĐĂNG KHOA
+Ngành: CÔNG NGHỆ THÔNG TIN (KỸ SƯ)
+Điện thoại: 0842615456 | MSSV: 24IT119
+Lớp: 24SE3
+Email: khoald.24it@vku.udn.vn
+Giảng viên hướng dẫn: 
+- Họ và tên : NGUYỄN QUANG VŨ
+- Học vị : TIẾN SĨ
+Họ và tên sinh viên: TRẦN NGUYỄN TUẤN ANH
+Ngành: CÔNG NGHỆ THÔNG TIN (KỸ SƯ)
+Điện thoại: 0899872942 | MSSV: 24IT010
+Lớp: 24SE1
+Email: anhtnt.24it@vku.udn.vn
+Giảng viên hướng dẫn: 
+- Họ và tên : NGUYỄN QUANG VŨ
+- Học vị : TIẾN SĨ
+Thời gian | Nội dung thực hiện | Nội dung thực hiện
+Tuần thứ 1
+từ 19/03/2026             đến 25/03/2026 | - Xác định mục tiêu, phạm vi và đối tượng người dùng của hệ thống đặt xe thông minh. 
+- Thu thập yêu cầu, phân tích nghiệp vụ và các chức năng chính (Khách hàng, Nhân viên, Quản trị). 
+- Phác thảo sơ đồ Use Case và kiến trúc tổng quan của hệ thống. | - Xác định mục tiêu, phạm vi và đối tượng người dùng của hệ thống đặt xe thông minh. 
+- Thu thập yêu cầu, phân tích nghiệp vụ và các chức năng chính (Khách hàng, Nhân viên, Quản trị). 
+- Phác thảo sơ đồ Use Case và kiến trúc tổng quan của hệ thống.
+Tuần thứ 2 
+từ 26/03/2026             đến 01/04/2026 | - Thiết kế cơ sở dữ liệu (ERD) cho hệ thống. 
+- Xác định các bảng dữ liệu chính như tài khoản người dùng, hóa đơn và thu chi. 
+- Thiết kế mối quan hệ giữa các bảng và chuẩn bị cấu trúc dữ liệu phục vụ phát triển ứng dụng. | - Thiết kế cơ sở dữ liệu (ERD) cho hệ thống. 
+- Xác định các bảng dữ liệu chính như tài khoản người dùng, hóa đơn và thu chi. 
+- Thiết kế mối quan hệ giữa các bảng và chuẩn bị cấu trúc dữ liệu phục vụ phát triển ứng dụng.
+Tuần thứ 3 
+từ 02/04/2026             đến 08/04/2026 | - Thiết kế wireframe và giao diện tổng quát cho ứng dụng mobile. 
+- Thiết kế các màn hình chính như: Đăng nhập, Đăng ký, Trang chủ, Bản đồ, Hóa đơn, Lịch sử chuyến đi, Tài khoản cá nhân. | - Thiết kế wireframe và giao diện tổng quát cho ứng dụng mobile. 
+- Thiết kế các màn hình chính như: Đăng nhập, Đăng ký, Trang chủ, Bản đồ, Hóa đơn, Lịch sử chuyến đi, Tài khoản cá nhân.
+Tuần thứ 4 
+từ 09/04/2026             đến 15/04/2026 | - Xây dựng giao diện ứng dụng trên Android Studio bằng Kotlin. 
+- Tạo cấu trúc project, các activity/fragment và thiết kế giao diện cơ bản cho các màn hình chính. | - Xây dựng giao diện ứng dụng trên Android Studio bằng Kotlin. 
+- Tạo cấu trúc project, các activity/fragment và thiết kế giao diện cơ bản cho các màn hình chính.
+Tuần thứ 5 
+từ 16/04/2026             đến 22/04/2026 | - Xây dựng chức năng đăng ký, đăng nhập, quên mật khẩu và quản lý thông tin tài khoản người dùng. 
+- Kết nối cơ sở dữ liệu hoặc API để xử lý dữ liệu tài khoản trong ứng dụng. | - Xây dựng chức năng đăng ký, đăng nhập, quên mật khẩu và quản lý thông tin tài khoản người dùng. 
+- Kết nối cơ sở dữ liệu hoặc API để xử lý dữ liệu tài khoản trong ứng dụng.
+Tuần thứ 6 
+từ 23/04/2026             đến 29/04/2026 | - Xây dựng chức năng đặt xe, nhập điểm đón và điểm đến. 
+- Tích hợp bản đồ, định vị GPS và hiển thị hành trình di chuyển trên ứng dụng. | - Xây dựng chức năng đặt xe, nhập điểm đón và điểm đến. 
+- Tích hợp bản đồ, định vị GPS và hiển thị hành trình di chuyển trên ứng dụng.
+Tuần thứ 7 
+từ 30/04/2026             đến 06/05/2026 | - Phát triển chức năng hiển thị hóa đơn, phương thức thanh toán và lưu thông tin chuyến đi. 
+- Xây dựng chức năng lịch sử chuyến đi của người dùng. | - Phát triển chức năng hiển thị hóa đơn, phương thức thanh toán và lưu thông tin chuyến đi. 
+- Xây dựng chức năng lịch sử chuyến đi của người dùng.
+Tuần thứ 8 
+từ 07/05/2026             đến 13/05/2026
+Tuần thứ 9 
+từ 14/05/2026             đến 20/05/2026 | - Kiểm thử các chức năng chính của ứng dụng trên thiết bị Android hoặc máy ảo. 
+- Kiểm thử đăng nhập, đặt xe, bản đồ, hóa đơn, lịch sử chuyến đi và bảo mật dữ liệu người dùng. | - Kiểm thử các chức năng chính của ứng dụng trên thiết bị Android hoặc máy ảo. 
+- Kiểm thử đăng nhập, đặt xe, bản đồ, hóa đơn, lịch sử chuyến đi và bảo mật dữ liệu người dùng.
+Tuần thứ 10 
+từ 21/05/2026             đến 27/05/2026 | - Triển khai chạy thử ứng dụng trên môi trường Android. 
+- Đánh giá hiệu năng, tốc độ xử lý, giao diện và trải nghiệm người dùng. 
+- Hoàn thiện báo cáo đồ án, slide trình bày và chuẩn bị bảo vệ đề tài. | - Triển khai chạy thử ứng dụng trên môi trường Android. 
+- Đánh giá hiệu năng, tốc độ xử lý, giao diện và trải nghiệm người dùng. 
+- Hoàn thiện báo cáo đồ án, slide trình bày và chuẩn bị bảo vệ đề tài.
+Ngày      tháng     năm 
+Giảng viên hướng dẫn
+ (ký và ghi rõ họ tên) | Ngày      tháng     năm 
+Giảng viên hướng dẫn
+ (ký và ghi rõ họ tên) | Ngày 19 tháng 03 năm 2026
+Sinh viên thực hiện
+(ký và ghi rõ họ tên)
+

@@ -1,0 +1,246 @@
+@startuml DoAn3_C4_Model
+
+title **C4 Model**
+
+' =====================================================
+' LEVEL 1: SYSTEM CONTEXT
+' =====================================================
+
+package "Level 1: System Context" <<Frame>> #E3F2FD {
+
+    person "Passenger\n(User)" as PASSENGER #FFCDD2
+    note right of PASSENGER #FFF3E0
+    Requests rides
+    Tracks drivers
+    Uses AI scheduling
+    Rates drivers
+    end note
+
+    person "Driver\n(User)" as DRIVER #A5D6A7
+    note right of DRIVER #FFF3E0
+    Accepts rides
+    Navigates routes
+    Tracks earnings
+    Batch trips
+    end note
+
+    rectangle "DoAn3 Smart Ride System" as DOAN3 #B3E5FC
+    note bottom of DOAN3 #E1F5FE
+    - User authentication
+    - Ride booking
+    - Real-time tracking
+    - AI scheduling
+    - Push notifications
+    - Chat messaging
+    end note
+
+    rectangle "Google Maps Platform" as GOOGLE_MAPS #E8F5E9
+    rectangle "Firebase Cloud Messaging" as FCM #F3E5F5
+    database "MySQL 8.0\n(11 Tables)" as MYSQL #FFEBEE
+
+    PASSENGER --> DOAN3 : "Book rides\nTrack drivers\nAI schedules"
+    DRIVER --> DOAN3 : "Accept rides\nUpdate status\nView earnings"
+    DOAN3 --> GOOGLE_MAPS : "Map display\nRoute visualization"
+    DOAN3 --> FCM : "Push notifications"
+    DOAN3 --> MYSQL : "CRUD operations"
+}
+
+' =====================================================
+' LEVEL 2: CONTAINERS
+' =====================================================
+
+package "Level 2: Container Diagram" <<Frame>> #E8F5E9 {
+
+    package "Android App (Kotlin)" <<Frame>> #C5CAE9 {
+        rectangle "Passenger App\n(Jetpack Compose)" as PASS_APP #90CAF9
+        rectangle "Driver App\n(Jetpack Compose)" as DRIVER_APP #7986CB
+        rectangle "ViewModels\n(StateFlow)" as VIEWMODELS #5C6BC0
+        rectangle "Repositories\n(Data Layer)" as REPOS #3F51B5
+        rectangle "Retrofit + Socket.IO\n(Network)" as NETWORK #303F9F
+        rectangle "SessionManager\n(SharedPreferences)" as SESSION #1A237E
+        rectangle "FCM Service\n(Firebase)" as FCM_SVC #0D47A1
+    }
+
+    package "Backend (Node.js)" <<Frame>> #C8E6C9 {
+        rectangle "Express REST API" as EXPRESS_API #A5D6A7
+        rectangle "Socket.IO Server\n(Real-time)" as SOCKET #81C784
+        rectangle "Repositories\n(Business Logic)" as BACK_REPOS #66BB6A
+        rectangle "FCM Notification\nService" as NOTIF #4CAF50
+        rectangle "Utils\n(geo.js, price.js)" as UTILS #388E3C
+    }
+
+    database "MySQL Database" as DB #FFCDD2
+
+    ' Container relationships
+    PASS_APP --> VIEWMODELS : "User actions"
+    VIEWMODELS --> REPOS : "Call repository"
+    REPOS --> NETWORK : "HTTP requests"
+    NETWORK --> EXPRESS_API : "REST API\nBearer token"
+    REPOS --> SESSION : "Store token"
+
+    DRIVER_APP --> VIEWMODELS : "User actions"
+    DRIVER_APP --> SESSION : "Store token"
+
+    VIEWMODELS --> NETWORK : "Socket events"
+    NETWORK --> SOCKET : "WebSocket\nReal-time"
+
+    SOCKET --> DB : "Location updates\nStatus changes"
+
+    EXPRESS_API --> BACK_REPOS : "Route handlers"
+    EXPRESS_API --> UTILS : "Geo/Price calc"
+    BACK_REPOS --> DB : "SQL queries"
+
+    NOTIF --> FCM : "Send push"
+    NOTIF --> DB : "Get tokens"
+
+    FCM_SVC ..> PASS_APP : "Push to device"
+    FCM_SVC ..> DRIVER_APP : "Push to device"
+
+    EXPRESS_API --> SOCKET : "Initialize"
+}
+
+' =====================================================
+' LEVEL 3: COMPONENTS
+' =====================================================
+
+package "Level 3: Component Diagram" <<Frame>> #FFF3E0 {
+
+    package "Android Components" <<Frame>> #BBDEFB {
+        rectangle "Screens" as SCREENS #90CAF9 {
+            "PassengerHomeScreen.kt"
+            "DriverHomeScreen.kt"
+            "AIScreens.kt"
+            "ChatScreen.kt"
+            "HistoryScreen.kt"
+            "ProfileScreen.kt"
+        }
+        rectangle "ViewModels" as VMS #7986CB {
+            "PassengerHomeViewModel"
+            "DriverHomeViewModel"
+            "AIScheduleViewModel"
+            "ProfileViewModel"
+        }
+        rectangle "Repositories" as REPOS_KT #5C6BC0 {
+            "AuthRepository"
+            "RideRepository"
+            "DriverRepository"
+            "AIRepository"
+        }
+        rectangle "Network Layer" as NET #3F51B5 {
+            "ApiService.kt"
+            "RetrofitClient.kt"
+            "SocketManager.kt"
+            "SessionManager.kt"
+        }
+        rectangle "DTOs" as DTOS #303F9F {
+            "DataModels.kt"
+            "AIModels.kt"
+        }
+    }
+
+    package "Backend Components" <<Frame>> #C8E6C9 {
+        rectangle "Routes" as ROUTES #FFE082 {
+            "auth.js"
+            "rides.js"
+            "drivers.js"
+            "ai.js"
+            "chat.js"
+            "locations.js"
+        }
+        rectangle "Repositories" as REPOS_JS #FFB74D {
+            "userRepository.js"
+            "rideRepository.js"
+            "driverRepository.js"
+            "aiRepository.js"
+            "locationRepository.js"
+        }
+        rectangle "Services" as SERVICES #FF8A65 {
+            "notification.js (FCM)"
+            "socket/index.js"
+        }
+        rectangle "Middleware" as MIDDLEWARE #FF7043 {
+            "auth.js (JWT)"
+        }
+        rectangle "Utils" as UTILS_BACK #FF5722 {
+            "geo.js"
+            "price.js"
+        }
+    }
+
+    database "MySQL Tables" as TABLES #FFCDD2 {
+        "users"
+        "drivers"
+        "rides"
+        "driver_locations"
+        "earnings"
+        "ai_trip_schedules"
+        "ai_waypoints"
+        "ai_route_alternatives"
+        "ai_learning_profiles"
+        "driver_route_batches"
+        "batch_passengers"
+    }
+
+    ' Component relationships
+    SCREENS --> VMS : "StateFlow.collect"
+    VMS --> REPOS_KT : "suspend functions"
+    REPOS_KT --> NET : "Retrofit calls"
+    NET --> DTOS : "JSON serialization"
+
+    ROUTES --> MIDDLEWARE : "Auth check"
+    ROUTES --> REPOS_JS : "Data access"
+    ROUTES --> UTILS_BACK : "Calculations"
+    REPOS_JS --> TABLES : "SQL queries"
+
+    SERVICES --> ROUTES : "Initialize"
+    SERVICES --> TABLES : "Real-time updates"
+}
+
+' =====================================================
+' TECHNOLOGY STACK SUMMARY
+' =====================================================
+
+package "Technology Stack" <<Frame>> #F5F5F5 {
+
+    rectangle "Android Stack" as STACK_AND #E8F5E9 {
+        rectangle "Language: Kotlin" as KOT #81C784
+        rectangle "UI: Jetpack Compose" as COMP #66BB6A
+        rectangle "Architecture: MVVM" as MVVM #4CAF50
+        rectangle "DI: Hilt" as HILT #388E3C
+        rectangle "Network: Retrofit2 + OkHttp" as RETRO #2E7D32
+        rectangle "Real-time: Socket.IO Client" as SOCK #1B5E20
+        rectangle "Maps: Google Maps SDK" as MAPS #A5D6A7
+        rectangle "Push: Firebase FCM" as FIRE #E57373
+    }
+
+    rectangle "Backend Stack" as STACK_BACK #E8F5E9 {
+        rectangle "Runtime: Node.js" as NODE #81C784
+        rectangle "Framework: Express.js" as EXPR #66BB6A
+        rectangle "Real-time: Socket.IO" as SOCKIO #4CAF50
+        rectangle "Auth: JWT + bcryptjs" as JWT #388E3C
+        rectangle "Database: MySQL 8.0" as SQL #2E7D32
+        rectangle "DB Client: mysql2" as MYSQL2 #1B5E20
+        rectangle "Push: Firebase Admin SDK" as FADM #E57373
+    }
+}
+
+' =====================================================
+' LEGEND
+' =====================================================
+
+legend right
+||= Symbol |= Meaning |
+|| person | Person (External Actor) |
+|| rectangle | System / Container |
+|| database | Database Container |
+endlegend
+
+legend left
+||= Color |= Layer |
+|| <back:#C5CAE9>   </back> | Android App |
+|| <back:#C8E6C9>   </back> | Backend |
+|| <back:#FFCDD2>   </back> | Database |
+|| <back:#FFF3E0>   </back> | Components |
+endlegend
+
+@enduml

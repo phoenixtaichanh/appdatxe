@@ -1,0 +1,245 @@
+@startuml DoAn3_Communication_Diagram
+
+!define RECTANGLE rectangle
+!define ACTIVE participant
+!define INACTIVE participant
+
+title **Communication Diagram**
+
+top to bottom direction
+
+' =====================================================
+' ANDROID APP
+' =====================================================
+
+package "Android App (Kotlin)" <<Frame>> #E3F2FD {
+
+    RECTANGLE "PassengerHomeScreen\n(Ui Layer - Compose)" as PASS_UI #C5CAE9
+    RECTANGLE "PassengerHomeViewModel\n(Business Logic)" as PASS_VM #9FA8DA
+    RECTANGLE "DriverHomeScreen\n(Ui Layer - Compose)" as DRIVER_UI #81C784
+    RECTANGLE "DriverHomeViewModel\n(Business Logic)" as DRIVER_VM #66BB6A
+    RECTANGLE "AIScreens.kt\n(Ui Layer)" as AI_UI #A5D6A7
+    RECTANGLE "AIScheduleViewModel\n(Business Logic)" as AI_VM #81C784
+
+    RECTANGLE "AuthRepository" as AUTH_REPO #FFE082
+    RECTANGLE "RideRepository" as RIDE_REPO #FFE082
+    RECTANGLE "DriverRepository" as DRIVER_REPO #FFE082
+    RECTANGLE "AIRepository" as AI_REPO #FFE082
+
+    RECTANGLE "ApiService\n(Retrofit Interface)" as API #C5CAE9
+    RECTANGLE "RetrofitClient" as RETROFIT #9FA8DA
+    RECTANGLE "SocketManager\n(Socket.IO Client)" as SOCKET #7986CB
+    RECTANGLE "SessionManager\n(SharedPreferences)" as SESSION #5C6BC0
+}
+
+' =====================================================
+' BACKEND
+' =====================================================
+
+package "Backend (Node.js)" <<Frame>> #E8F5E9 {
+
+    RECTANGLE "Express App\n(index.js)" as EXPRESS #FFE0B2
+
+    RECTANGLE "/api/auth\n(Route)" as AUTH_ROUTE #C8E6C9
+    RECTANGLE "/api/users\n(Route)" as USERS_ROUTE #C8E6C9
+    RECTANGLE "/api/rides\n(Route)" as RIDES_ROUTE #C8E6C9
+    RECTANGLE "/api/driver\n(Route)" as DRIVERS_ROUTE #C8E6C9
+    RECTANGLE "/api/ai\n(Route)" as AI_ROUTE #C8E6C9
+    RECTANGLE "/api/chat\n(Route)" as CHAT_ROUTE #C8E6C9
+
+    RECTANGLE "JWT Auth Middleware" as AUTH_MW #ADD8E6
+    RECTANGLE "CORS Middleware" as CORS_MW #ADD8E6
+
+    RECTANGLE "userRepository" as USER_REPO #81C784
+    RECTANGLE "rideRepository" as RIDE_REPO_BACK #81C784
+    RECTANGLE "driverRepository" as DRIVER_REPO_BACK #81C784
+    RECTANGLE "locationRepository" as LOC_REPO #81C784
+    RECTANGLE "aiRepository" as AI_REPO_BACK #81C784
+
+    RECTANGLE "geo.js\n(Haversine)" as GEO #FFB74D
+    RECTANGLE "price.js\n(Pricing)" as PRICE #FFB74D
+
+    RECTANGLE "notification.js\n(FCM)" as NOTIF #CE93D8
+    RECTANGLE "Socket.IO Server" as SOCKET_IO #B39DDB
+}
+
+' =====================================================
+' DATABASE
+' =====================================================
+
+package "MySQL Database" <<Frame>> #FFEBEE {
+    RECTANGLE "users" as TBL_USERS #FFCDD2
+    RECTANGLE "drivers" as TBL_DRIVERS #FFCDD2
+    RECTANGLE "rides" as TBL_RIDES #FFCDD2
+    RECTANGLE "driver_locations" as TBL_LOC #FFCDD2
+    RECTANGLE "earnings" as TBL_EARN #FFCDD2
+    RECTANGLE "ai_trip_schedules" as TBL_AI_SCHED #C8E6C9
+    RECTANGLE "ai_waypoints" as TBL_WAYPOINTS #C8E6C9
+    RECTANGLE "ai_route_alternatives" as TBL_ALT #C8E6C9
+    RECTANGLE "ai_learning_profiles" as TBL_AI_PROF #C8E6C9
+    RECTANGLE "driver_route_batches" as TBL_BATCHES #C8E6C9
+    RECTANGLE "batch_passengers" as TBL_BATCH_PAX #C8E6C9
+}
+
+' =====================================================
+' EXTERNAL SERVICES
+' =====================================================
+
+package "External Services" <<Frame>> #F3E5F5 {
+    RECTANGLE "Firebase Cloud Messaging" as FCM #CE93D8
+    RECTANGLE "Google Maps SDK" as MAPS #B39DDB
+}
+
+' =====================================================
+' COMMUNICATION FLOWS
+' =====================================================
+
+' UI -> ViewModel -> Repository -> API -> Backend
+
+PASS_UI -> PASS_VM : "User actions\n(pickup, destination, request)"
+PASS_VM -> RIDE_REPO : "Repository calls"
+RIDE_REPO -> API : "Retrofit HTTP calls"
+API -> RETROFIT : "Request/Response"
+
+DRIVER_UI -> DRIVER_VM : "User actions\n(accept, status update)"
+DRIVER_VM -> DRIVER_REPO : "Repository calls"
+DRIVER_REPO -> API : "Retrofit HTTP calls"
+
+AI_UI -> AI_VM : "User actions\n(create schedule)"
+AI_VM -> AI_REPO : "Repository calls"
+AI_REPO -> API : "Retrofit HTTP calls"
+
+' Retrofit -> REST API
+
+RETROFIT -[#red,dashed]-> AUTH_ROUTE : "POST /api/auth/register\nPOST /api/auth/login"
+RETROFIT -[#red,dashed]-> USERS_ROUTE : "GET /api/users/me\nGET /api/users/drivers/nearby"
+RETROFIT -[#red,dashed]-> RIDES_ROUTE : "POST /api/rides/request\nGET /api/rides/:id\nPUT /api/rides/:id/status\nPOST /api/rides/:id/rate"
+RETROFIT -[#red,dashed]-> DRIVERS_ROUTE : "PUT /api/driver/status\nPOST /api/driver/ride/:id/accept\nGET /api/driver/earnings"
+RETROFIT -[#red,dashed]-> AI_ROUTE : "POST /api/ai/schedule/create\nGET /api/ai/recommendations\nPOST /api/ai/rides/optimize"
+RETROFIT -[#red,dashed]-> CHAT_ROUTE : "GET /api/chat/:rideId/messages\nPOST /api/chat/:rideId/send"
+
+' REST API -> Middleware
+
+AUTH_ROUTE --> AUTH_MW : "JWT verification"
+USERS_ROUTE --> AUTH_MW : "JWT verification"
+RIDES_ROUTE --> AUTH_MW : "JWT verification"
+DRIVERS_ROUTE --> AUTH_MW : "JWT verification"
+AI_ROUTE --> AUTH_MW : "JWT verification"
+
+AUTH_ROUTE --> CORS_MW : "CORS headers"
+USERS_ROUTE --> CORS_MW : "CORS headers"
+RIDES_ROUTE --> CORS_MW : "CORS headers"
+DRIVERS_ROUTE --> CORS_MW : "CORS headers"
+AI_ROUTE --> CORS_MW : "CORS headers"
+
+' Routes -> Repositories
+
+AUTH_ROUTE --> USER_REPO : "CRUD users"
+USERS_ROUTE --> USER_REPO : "Get user profile"
+USERS_ROUTE --> DRIVER_REPO_BACK : "Get nearby drivers"
+
+RIDES_ROUTE --> RIDE_REPO_BACK : "CRUD rides"
+RIDES_ROUTE --> DRIVER_REPO_BACK : "Assign driver"
+RIDES_ROUTE --> RIDE_REPO_BACK : "Rate ride"
+
+DRIVERS_ROUTE --> DRIVER_REPO_BACK : "Update status\nSet availability\nGet earnings"
+DRIVERS_ROUTE --> RIDE_REPO_BACK : "Accept/reject ride"
+
+AI_ROUTE --> AI_REPO_BACK : "Create schedules\nGet recommendations\nOptimize routes"
+AI_ROUTE --> AI_REPO_BACK : "Get batches\nAccept batch"
+
+CHAT_ROUTE --> TBL_RIDES : "Query messages"
+
+' Repositories -> Utils
+
+RIDE_REPO_BACK ..> GEO : "Calculate distance"
+RIDE_REPO_BACK ..> PRICE : "Calculate price"
+AI_REPO_BACK ..> GEO : "Calculate distance"
+AI_REPO_BACK ..> PRICE : "Calculate price"
+
+' Repositories -> Database
+
+USER_REPO --> TBL_USERS : "INSERT/SELECT/UPDATE"
+DRIVER_REPO_BACK --> TBL_DRIVERS : "INSERT/SELECT/UPDATE"
+DRIVER_REPO_BACK --> TBL_LOC : "INSERT/UPDATE location"
+DRIVER_REPO_BACK --> TBL_EARN : "INSERT earnings"
+RIDE_REPO_BACK --> TBL_RIDES : "INSERT/SELECT/UPDATE"
+RIDE_REPO_BACK --> TBL_EARN : "Record earnings"
+AI_REPO_BACK --> TBL_AI_SCHED : "INSERT/SELECT schedules"
+AI_REPO_BACK --> TBL_WAYPOINTS : "INSERT waypoints"
+AI_REPO_BACK --> TBL_ALT : "INSERT route alternatives"
+AI_REPO_BACK --> TBL_AI_PROF : "SELECT/UPDATE profiles"
+AI_REPO_BACK --> TBL_BATCHES : "SELECT/INSERT batches"
+AI_REPO_BACK --> TBL_BATCH_PAX : "INSERT batch passengers"
+LOC_REPO --> TBL_LOC : "INSERT/UPDATE"
+
+' Socket.IO Communication
+
+SOCKET -[#blue,dashed]-> SOCKET_IO : "location:update {lat, lng, rideId}"
+SOCKET -[#blue,dashed]-> SOCKET_IO : "ride:status {rideId, status}"
+SOCKET -[#blue,dashed]-> SOCKET_IO : "join:ride {rideId}"
+SOCKET -[#blue,dashed]-> SOCKET_IO : "request:driver:location {rideId}"
+
+SOCKET_IO -[#green,dashed]-> SOCKET : "driver:location {lat, lng, rideId}"
+SOCKET_IO -[#green,dashed]-> SOCKET : "ride:status:changed {rideId, status}"
+
+SOCKET_IO --> TBL_LOC : "UPDATE driver location"
+SOCKET_IO --> TBL_RIDES : "UPDATE ride status"
+
+' Session Management
+
+SESSION <-- API : "Store/retrieve JWT token"
+SESSION <-- PASS_VM : "Save user data"
+SESSION <-- DRIVER_VM : "Save user data"
+
+' Notification
+
+NOTIF --> FCM : "Send push notification"
+NOTIF --> TBL_USERS : "Query FCM tokens"
+
+FCM -[#purple,dashed]-> SESSION : "Token refresh"
+
+' Maps
+
+PASS_UI --> MAPS : "Display map with markers"
+DRIVER_UI --> MAPS : "Display map with route"
+MAPS --> API : "Geocoding (implied)"
+
+' Express App orchestration
+
+EXPRESS --> CORS_MW : "Apply middleware"
+EXPRESS --> AUTH_MW : "Apply middleware"
+EXPRESS --> AUTH_ROUTE : "Mount /api/auth"
+EXPRESS --> USERS_ROUTE : "Mount /api/users"
+EXPRESS --> RIDES_ROUTE : "Mount /api/rides"
+EXPRESS --> DRIVERS_ROUTE : "Mount /api/driver"
+EXPRESS --> AI_ROUTE : "Mount /api/ai"
+EXPRESS --> CHAT_ROUTE : "Mount /api/chat"
+EXPRESS --> SOCKET_IO : "Initialize Socket.IO"
+EXPRESS --> NOTIF : "Initialize FCM"
+
+' =====================================================
+' LEGEND
+' =====================================================
+
+legend right
+|= Color |= Communication Type |
+| --[#red,dashed]--> | REST API (HTTP) |
+| --[#blue,dashed]--> | Socket.IO Emit (Client -> Server) |
+| --[#green,dashed]--> | Socket.IO Emit (Server -> Client) |
+| --[#purple,dashed]--> | Push Notification |
+| --> | Internal call |
+endlegend
+
+legend left
+|= Layer |= Components |
+| Android UI | PassengerHomeScreen, DriverHomeScreen, AIScreens |
+| ViewModel | PassengerHomeViewModel, DriverHomeViewModel, AIScheduleViewModel |
+| Repository | AuthRepository, RideRepository, DriverRepository, AIRepository |
+| Network | ApiService, RetrofitClient, SocketManager, SessionManager |
+| Backend Routes | /api/auth, /api/rides, /api/driver, /api/ai |
+| Backend Logic | Repositories, geo.js, price.js, notification.js |
+| Database | 11 MySQL Tables |
+endlegend
+
+@enduml

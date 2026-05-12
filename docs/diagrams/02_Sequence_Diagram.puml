@@ -1,0 +1,338 @@
+@startuml DoAn3_Sequence_Diagram
+!theme plain
+hide footbox
+skinparam maxMessageSize 200
+skinparam minClassWidth 100
+skinparam participantPadding 10
+skinparam boxPadding 10
+
+skinparam sequence {
+    ArrowColor #1565C0
+    ArrowFontSize 10
+    DividerBackgroundColor #E8EAF6
+    DividerBorderColor #3F51B5
+    LifeLineBackgroundColor #E8EAF6
+    LifeLineBorderColor #3F51B5
+    MessageAlignment left
+    NoteBackgroundColor #FFF8E1
+    NoteBorderColor #FFB300
+}
+skinparam note {
+    BackgroundColor #FFFDE7
+    BorderColor #FFB300
+    FontSize 9
+    FontColor #3E2723
+}
+skinparam title {
+    FontSize 16
+    FontColor #1A237E
+    BorderColor #3F51B5
+}
+
+title **DoAn3 - Sequence Diagram\nĐặt xe thông minh + AI Travel Assistant**
+
+' ================================================
+' PARTICIPANTS
+' ================================================
+
+actor PASSENGER #FFEBEE|B71C1C
+participant "PassengerHomeScreen" as PASS_UI #E3F2FD|1565C0
+participant "PassengerHomeViewModel" as PASS_VM #E8EAF6|303F9F
+participant "RideRepository" as RIDE_REPO #E8F5E9|2E7D32
+participant "ApiService" as API #FFF3E0|E65100
+participant "/api/rides" as RIDES_ROUTE #F3E5F5|6A1B9A
+participant "/api/driver" as DRIVER_ROUTE #F3E5F5|6A1B9A
+participant "/api/ai" as AI_ROUTE #F3E5F5|6A1B9A
+participant "geo.js" as GEO #E0F2F1|00695C
+participant "price.js" as PRICE #E0F2F1|00695C
+participant "rideRepository" as RIDE_BACK_REPO #FBE9E7|BF360C
+participant "driverRepository" as DRIVER_BACK_REPO #FBE9E7|BF360C
+participant "aiRepository" as AI_BACK_REPO #FBE9E7|BF360C
+participant "MySQL Database" as DB #EFEBE9|4E342E
+participant "Socket.IO" as SOCKET #E1F5FE|0277BD
+actor DRIVER_APP #E8F5E9|2E7D32
+participant "DriverHomeScreen" as DRIVER_UI #E3F2FD|1565C0
+participant "DriverHomeViewModel" as DRIVER_VM #E8EAF6|303F9F
+participant "AIRepository" as AI_REPO #E8F5E9|2E7D32
+
+legend right
+|= Màu |= Tầng |=
+| Đỏ nhạt | Passenger App |
+| Xanh dương nhạt | UI Layer |
+| Tím nhạt | ViewModel / Repository |
+| Cam nhạt | API Service |
+| Tím | Backend REST Routes |
+| Cam đất | Backend Repository |
+| Nâu nhạt | MySQL Database |
+| Xanh dương | Socket.IO |
+| Xanh lá nhạt | Driver App |
+endlegend
+
+' ================================================
+' FLOW 1: AUTHENTICATION
+' ================================================
+== 1. XÁC THỰC ĐĂNG NHẬP ==
+
+PASSENGER -> PASS_UI : Nhập email & password
+PASS_UI -> PASS_VM : login(email, password)
+PASS_VM -> RIDE_REPO : login(email, password)
+RIDE_REPO -> API : POST /api/auth/login\n{email, password}
+API -> RIDES_ROUTE : POST /api/auth/login
+note right of RIDES_ROUTE #FFFDE7
+routes/auth.js
+Xác thực & kiểm tra password
+end note
+
+RIDES_ROUTE -> DB : SELECT * FROM users\nWHERE email = ?
+DB --> RIDES_ROUTE : User record
+
+RIDES_ROUTE -> RIDES_ROUTE : bcrypt.compare(password, hash)
+note right of RIDES_ROUTE #E8F5E9
+✓ Đúng → tạo JWT token
+jwt.sign({id, email, user_type}, JWT_SECRET)
+Token hết hạn sau 30 ngày
+end note
+
+RIDES_ROUTE --> API : {success: true, token, user}
+API --> RIDE_REPO : AuthResponse
+RIDE_REPO --> PASS_VM : Result.success(user)
+PASS_VM -> PASS_VM : SessionManager.saveAuthToken(token)\nSessionManager.saveUser(user)
+PASS_VM --> PASS_UI : navigate → Home
+PASS_UI -> PASSENGER : Hiển thị màn hình Home
+
+' ================================================
+' FLOW 2: ĐẶT XE
+' ================================================
+== 2. ĐẶT XE ==
+
+PASSENGER -> PASS_UI : Chọn điểm đón & điểm đến
+PASS_UI -> PASS_VM : updatePickupLocation(lat, lng, address)
+PASS_UI -> PASS_VM : updateDestLocation(lat, lng, address)
+PASS_UI -> PASS_VM : updateVehicleType("motorbike")
+
+PASSENGER -> PASS_UI : Nhấn "Đặt xe"
+PASS_UI -> PASS_VM : requestRide()
+PASS_VM -> RIDE_REPO : requestRide(RideRequestDto)
+RIDE_REPO -> API : POST /api/rides/request
+API -> RIDES_ROUTE : POST /api/rides/request\n{pickup, dest, vehicle_type}
+
+RIDES_ROUTE -> GEO : estimateRideDetails(pickup, dest)
+GEO --> RIDES_ROUTE : {distanceKm, durationMin}
+
+RIDES_ROUTE -> PRICE : calculatePrice(distanceKm, durationMin, vehicleType)
+PRICE --> RIDES_ROUTE : price (VNĐ)
+
+RIDES_ROUTE -> RIDE_BACK_REPO : create(rideData)
+RIDE_BACK_REPO -> DB : INSERT INTO rides (...)\nstatus = 'pending'
+DB --> RIDE_BACK_REPO : insertId (rideId)
+RIDE_BACK_REPO --> RIDES_ROUTE : Ride object
+RIDES_ROUTE --> API : 201 RideDto
+API --> RIDE_REPO : RideDto
+RIDE_REPO --> PASS_VM : Result.success(ride)
+PASS_VM -> PASS_VM : currentRide = ride\nisRideActive = true
+PASS_VM --> PASS_UI : Cập nhật UI
+
+' ================================================
+' FLOW 3: TÀI XẾ NHẬN CHUYẾN
+' ================================================
+== 3. TÀI XẾ NHẬN CHUYẾN ==
+
+DRIVER_APP -> DRIVER_UI : Xem danh sách chuyến khả dụng
+DRIVER_UI -> DRIVER_VM : loadAvailableRides()
+DRIVER_VM -> RIDE_REPO : getAvailableRides()
+RIDE_REPO -> API : GET /api/driver/ride/available
+API -> DRIVER_ROUTE : SELECT * FROM rides\nWHERE status = 'pending'\nAND driver_id IS NULL
+DRIVER_ROUTE -> DB : Query
+DB --> DRIVER_ROUTE : rides[]
+DRIVER_ROUTE --> API : rides[]
+API --> RIDE_REPO : List<RideDto>
+RIDE_REPO --> DRIVER_VM : Result.success(rides)
+DRIVER_VM --> DRIVER_UI : Hiển thị danh sách
+DRIVER_UI -> DRIVER_APP : Hiển thị thẻ chuyến
+
+DRIVER_APP -> DRIVER_UI : Nhấn "Nhận chuyến"
+DRIVER_UI -> DRIVER_VM : acceptRide(rideId)
+DRIVER_VM -> RIDE_REPO : acceptRide(rideId)
+RIDE_REPO -> API : POST /api/driver/ride/{id}/accept
+API -> DRIVER_ROUTE : UPDATE rides SET driver_id=?\nstatus='accepted'
+
+DRIVER_ROUTE -> DRIVER_BACK_REPO : assignDriver(rideId, driverId)
+DRIVER_BACK_REPO -> DB : UPDATE rides SET driver_id=?, status='accepted'
+DRIVER_BACK_REPO -> DB : UPDATE drivers SET is_available=FALSE\ncurrent_ride_id=?
+DB --> DRIVER_BACK_REPO : OK
+DRIVER_BACK_REPO --> DRIVER_ROUTE : OK
+DRIVER_ROUTE --> API : 200 RideDto
+API --> RIDE_REPO : RideDto
+RIDE_REPO --> DRIVER_VM : Result.success(ride)
+DRIVER_VM --> DRIVER_UI : Cập nhật UI
+DRIVER_UI -> DRIVER_APP : Hiển thị chi tiết chuyến
+
+group #F5F5F5 Polling trạng thái (mỗi 3 giây)
+    loop Mỗi 3 giây
+        PASS_VM -> RIDE_REPO : getRide(rideId)
+        RIDE_REPO -> API : GET /api/rides/{id}
+        API -> RIDES_ROUTE : SELECT * FROM rides WHERE id = ?
+        RIDES_ROUTE -> DB : Query
+        DB --> RIDES_ROUTE : Ride record
+        RIDES_ROUTE --> API : RideDto
+        API --> RIDE_REPO : RideDto
+        RIDE_REPO --> PASS_VM : Result.success(ride)
+
+        alt ride.status == 'accepted'
+            PASS_VM --> PASS_UI : Hiển thị thông tin tài xế
+        end
+    end
+end
+
+' ================================================
+' FLOW 4: THEO DÕI VỊ TRÍ REAL-TIME
+' ================================================
+== 4. THEO DÕI VỊ TRÍ REAL-TIME ==
+
+note over DRIVER_VM #E3F2FD
+GPS gửi mỗi 3 giây
+end note
+
+loop Mỗi 3 giây (trong chuyến)
+    DRIVER_VM -> DRIVER_VM : getCurrentLocation()
+    DRIVER_VM -> RIDE_REPO : updateDriverLocation(lat, lng)
+    RIDE_REPO -> API : POST /api/location/update\n{latitude, longitude}
+    API -> DRIVER_ROUTE : INSERT INTO driver_locations\nON DUPLICATE KEY UPDATE...
+    DRIVER_ROUTE -> DB : UPDATE latitude=?, longitude=?
+    DB --> DRIVER_ROUTE : OK
+    DRIVER_ROUTE --> API : OK
+    API --> RIDE_REPO : OK
+
+    DRIVER_VM -> SOCKET : socket.emit('location:update', {lat, lng, rideId})
+    SOCKET -> DB : UPDATE drivers SET latitude=?, longitude=?\nWHERE user_id = ?
+    SOCKET -> SOCKET : SELECT passenger_id FROM rides WHERE id = ?
+    SOCKET -> SOCKET : io.to('user_{passengerId}')
+    SOCKET -> PASSENGER : socket.emit('driver:location', {lat, lng, rideId})
+
+    PASSENGER -> PASS_VM : driverLocationFlow.collect { location }
+    PASS_VM -> PASS_VM : driverLat = location.lat\ndriverLng = location.lng
+    PASS_VM --> PASS_UI : Cập nhật marker trên bản đồ
+end
+
+' ================================================
+' FLOW 5: CẬP NHẬT TRẠNG THÁI CHUYẾN
+' ================================================
+== 5. CẬP NHẬT TRẠNG THÁI CHUYẾN ==
+
+DRIVER_APP -> DRIVER_UI : Cập nhật trạng thái\n(arrived / in_progress / completed)
+DRIVER_UI -> DRIVER_VM : updateRideStatus(rideId, status)
+DRIVER_VM -> RIDE_REPO : updateRideStatus(rideId, status)
+RIDE_REPO -> API : PUT /api/driver/ride/{id}/status\n{status}
+API -> DRIVER_ROUTE : UPDATE rides SET status=?\nstarted_at = NOW()
+
+alt status == 'completed'
+    DRIVER_ROUTE -> DRIVER_BACK_REPO : recordEarning(driverId, rideId, amount)
+    DRIVER_BACK_REPO -> DB : INSERT INTO earnings (type='ride')
+    DRIVER_BACK_REPO -> DB : UPDATE drivers SET is_available=TRUE\ncurrent_ride_id = NULL
+end
+
+DRIVER_ROUTE --> API : 200 RideDto
+API --> RIDE_REPO : RideDto
+RIDE_REPO --> DRIVER_VM : Result.success(ride)
+
+DRIVER_VM -> SOCKET : socket.emit('ride:status', {rideId, status})
+SOCKET -> DB : UPDATE rides SET status=? WHERE id = ?
+SOCKET -> SOCKET : io.to('user_{passengerId}')
+SOCKET -> PASSENGER : socket.emit('ride:status:changed', {rideId, status})
+
+PASSENGER -> PASS_VM : rideStatusFlow.collect { update }
+PASS_VM -> PASS_VM : currentRide.status = status
+PASS_VM --> PASS_UI : Cập nhật UI
+PASS_UI -> PASSENGER : Hiển thị thông báo trạng thái
+
+' ================================================
+' FLOW 6: TẠO LỊCH TRÌNH AI
+' ================================================
+== 6. TẠO LỊCH TRÌNH AI ==
+
+PASSENGER -> PASS_UI : Mở AI Schedule
+PASS_UI -> PASS_VM : loadHistory()
+PASS_VM -> AI_REPO : getAIHistory()
+AI_REPO -> API : GET /api/ai/history
+API -> AI_ROUTE : SELECT * FROM ai_trip_schedules\nWHERE user_id = ?
+AI_ROUTE -> DB : Query
+DB --> AI_ROUTE : schedules[]
+AI_ROUTE --> API : AIScheduleDto[]
+API --> AI_REPO : List<AIScheduleDto>
+AI_REPO --> PASS_VM : Result.success(schedules)
+
+PASSENGER -> PASS_UI : Tạo lịch trình mới\nThêm các điểm dừng
+PASS_UI -> PASS_VM : createSchedule(name, date, optimization, waypoints)
+PASS_VM -> AI_REPO : createSchedule(name, date, 'balanced', waypoints)
+AI_REPO -> API : POST /api/ai/schedule/create
+API -> AI_ROUTE : POST /api/ai/schedule/create\n{schedule_name, date, waypoints}
+
+AI_ROUTE -> AI_BACK_REPO : createSchedule(userId, data)
+
+loop Với mỗi đoạn waypoint
+    AI_BACK_REPO -> GEO : haversineDistance(prev, curr)
+    GEO --> AI_BACK_REPO : distance_km
+    AI_BACK_REPO -> PRICE : calculatePrice(distance, duration)
+    PRICE --> AI_BACK_REPO : segment_price
+end
+
+AI_BACK_REPO -> DB : INSERT ai_trip_schedules\nINSERT ai_waypoints\nINSERT ai_route_alternatives
+DB --> AI_BACK_REPO : Schedule created
+
+AI_BACK_REPO --> AI_ROUTE : AISchedule with waypoints & alternatives
+AI_ROUTE --> API : AIScheduleDto
+API --> AI_REPO : AIScheduleDto
+AI_REPO --> PASS_VM : Result.success(schedule)
+PASS_VM --> PASS_UI : Hiển thị lịch trình
+PASS_UI -> PASSENGER : Hiển thị bản đồ với lộ trình
+
+' ================================================
+' FLOW 7: TỐI ƯU LỘ TRÌNH AI
+' ================================================
+== 7. TỐI ƯU LỘ TRÌNH AI ==
+
+PASSENGER -> PASS_UI : Nhấn "Tối ưu lộ trình"\nChọn "Ưu tiên thời gian"
+PASS_UI -> PASS_VM : optimizeSchedule(scheduleId, 'time')
+PASS_VM -> AI_REPO : optimizeSchedule(scheduleId, 'time')
+AI_REPO -> API : POST /api/ai/schedule/{id}/optimize\n{optimization_type: 'time'}
+API -> AI_ROUTE : DELETE + INSERT ai_route_alternatives\n(time_scenario, cost_scenario, balanced_scenario)
+
+AI_ROUTE -> AI_BACK_REPO : reoptimize(id, 'time')
+AI_BACK_REPO -> DB : DELETE + INSERT alternatives
+DB --> AI_BACK_REPO : alternatives[]
+AI_BACK_REPO --> AI_ROUTE : alternatives[]
+AI_ROUTE --> API : RouteAlternativeDto[]
+API --> AI_REPO : List<RouteAlternativeDto>
+AI_REPO --> PASS_VM : Result.success(alternatives)
+PASS_VM --> PASS_UI : Cập nhật bản đồ
+PASS_UI -> PASSENGER : Highlight tuyến đường khuyến nghị
+
+' ================================================
+' FLOW 8: ĐÁNH GIÁ TÀI XẾ
+' ================================================
+== 8. ĐÁNH GIÁ TÀI XẾ ==
+
+PASSENGER -> PASS_UI : Đánh giá tài xế (4 sao)
+PASS_UI -> PASS_VM : rateRide(rideId, 4, "Tài xế tốt")
+PASS_VM -> RIDE_REPO : rateRide(rideId, 4, comment)
+RIDE_REPO -> API : POST /api/rides/{id}/rate\n{rating: 4, comment}
+API -> RIDES_ROUTE : UPDATE rides SET driver_rating=?\nrating_comment=?
+
+RIDES_ROUTE -> RIDE_BACK_REPO : rate(rideId, {rating, comment, raterType: 'passenger'})
+RIDE_BACK_REPO -> DB : UPDATE rides SET driver_rating=4\nrating_comment='Tài xế tốt'
+RIDE_BACK_REPO -> DB : SELECT AVG(driver_rating) FROM rides\nWHERE driver_id = ?
+DB --> RIDE_BACK_REPO : avg_rating
+RIDE_BACK_REPO -> DB : UPDATE users SET rating=?\nWHERE id = driverId
+DB --> RIDE_BACK_REPO : OK
+
+RIDE_BACK_REPO --> RIDES_ROUTE : Ride
+RIDES_ROUTE --> API : 200 RideDto
+API --> RIDE_REPO : RideDto
+RIDE_REPO --> PASS_VM : Result.success(ride)
+PASS_VM -> PASS_VM : currentRide = null\nisRideActive = false
+PASS_VM --> PASS_UI : "Cảm ơn!"
+PASS_UI -> PASSENGER : Hiển thị thông báo cảm ơn
+
+center footer **DoAn3 - Smart Ride + AI Assistant | 2026**
+
+@enduml

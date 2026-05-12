@@ -1,0 +1,195 @@
+@startuml DoAn3_Database_Schema
+
+title **DoAn3 - Database Schema (11 Tables)**
+
+skinparam classAttributeIconSize 0
+skinparam maxMessageSize 150
+hide empty members
+
+package "MySQL Database" <<Frame>> #FFF0F0 {
+
+    package "Core Tables" <<Frame>> #FFCDD2 {
+        class "users" as users <<TABLE>> #FFCDD2 {
+            + id: INT {PK, AUTO}
+            + email: VARCHAR(255) {UNIQUE, NOT NULL}
+            + password: VARCHAR(255) {NOT NULL}
+            + name: VARCHAR(255) {NOT NULL}
+            + phone: VARCHAR(20)
+            + user_type: ENUM {passenger, driver, owner, consultant}
+            + rating: DECIMAL(3,2) {DEFAULT 5.00}
+            + total_rides: INT {DEFAULT 0}
+            + created_at: TIMESTAMP
+        }
+
+        class "drivers" as drivers <<TABLE>> #FFCDD2 {
+            + id: INT {PK, AUTO}
+            + user_id: INT {FK -> users, UNIQUE, NOT NULL}
+            + car_model: VARCHAR(100)
+            + car_color: VARCHAR(50)
+            + license_plate: VARCHAR(20)
+            + is_available: BOOLEAN {DEFAULT FALSE}
+            + latitude: DECIMAL(10,8)
+            + longitude: DECIMAL(11,8)
+            + created_at: TIMESTAMP
+        }
+
+        class "rides" as rides <<TABLE>> #FFCDD2 {
+            + id: INT {PK, AUTO}
+            + passenger_id: INT {FK -> users, NOT NULL}
+            + driver_id: INT {FK -> drivers, NULL}
+            + pickup_lat: DECIMAL(10,8)
+            + pickup_lng: DECIMAL(11,8)
+            + dest_lat: DECIMAL(10,8)
+            + dest_lng: DECIMAL(11,8)
+            + pickup_address: VARCHAR(500)
+            + dest_address: VARCHAR(500)
+            + vehicle_type: ENUM {motorbike, car_4_seats, car_7_seats}
+            + distance_km: DECIMAL(8,2)
+            + duration_min: INT
+            + price: DECIMAL(10,0)
+            + status: ENUM {pending, accepted, arrived, in_progress, completed, cancelled}
+            + driver_rating: TINYINT
+            + passenger_rating: TINYINT
+            + rating_comment: VARCHAR(500)
+            + started_at: TIMESTAMP
+            + completed_at: TIMESTAMP
+            + created_at: TIMESTAMP
+        }
+
+        class "driver_locations" as driver_locations <<TABLE>> #FFCDD2 {
+            + id: INT {PK, AUTO}
+            + driver_id: INT {FK -> drivers, NOT NULL}
+            + latitude: DECIMAL(10,8)
+            + longitude: DECIMAL(11,8)
+            + accuracy: DECIMAL(8,2)
+            + speed: DECIMAL(6,2)
+            + heading: INT
+            + updated_at: TIMESTAMP
+        }
+
+        class "earnings" as earnings <<TABLE>> #FFCDD2 {
+            + id: INT {PK, AUTO}
+            + driver_id: INT {FK -> drivers, NOT NULL}
+            + ride_id: INT {FK -> rides, NULL}
+            + amount: DECIMAL(12,0)
+            + type: ENUM {ride, bonus, penalty, withdrawal}
+            + note: VARCHAR(255)
+            + created_at: TIMESTAMP
+        }
+    }
+
+    package "AI Tables" <<Frame>> #C8E6C9 {
+        class "ai_trip_schedules" as ai_trip_schedules <<TABLE>> #C8E6C9 {
+            + id: INT {PK, AUTO}
+            + user_id: INT {FK -> users, NOT NULL}
+            + schedule_name: VARCHAR(255)
+            + scheduled_date: DATE
+            + total_estimated_time: INT
+            + total_estimated_price: DECIMAL(12,0)
+            + total_distance: DECIMAL(8,2)
+            + optimization_type: ENUM {time, cost, balanced}
+            + ai_confidence_score: DECIMAL(3,2)
+            + traffic_condition: VARCHAR(50)
+            + status: ENUM {planned, in_progress, completed, cancelled}
+            + created_at: TIMESTAMP
+        }
+
+        class "ai_waypoints" as ai_waypoints <<TABLE>> #C8E6C9 {
+            + id: INT {PK, AUTO}
+            + schedule_id: INT {FK -> ai_trip_schedules, NOT NULL}
+            + stop_order: INT
+            + stop_type: ENUM {pickup, dropoff, stopover}
+            + latitude: DECIMAL(10,8)
+            + longitude: DECIMAL(11,8)
+            + address: VARCHAR(500)
+            + stop_name: VARCHAR(255)
+            + estimated_arrival: TIME
+            + duration_min: INT
+            + distance_from_prev: DECIMAL(8,2)
+            + is_optional: BOOLEAN
+            + priority: INT
+        }
+
+        class "ai_route_alternatives" as ai_route_alternatives <<TABLE>> #C8E6C9 {
+            + id: INT {PK, AUTO}
+            + schedule_id: INT {FK -> ai_trip_schedules, NOT NULL}
+            + route_name: VARCHAR(100)
+            + total_distance: DECIMAL(8,2)
+            + total_duration: INT
+            + total_price: DECIMAL(12,0)
+            + is_recommended: BOOLEAN
+            + traffic_scenario: VARCHAR(50)
+        }
+
+        class "ai_learning_profiles" as ai_learning_profiles <<TABLE>> #C8E6C9 {
+            + id: INT {PK, AUTO}
+            + user_id: INT {FK -> users, UNIQUE, NOT NULL}
+            + preferred_time_start: TIME
+            + preferred_time_end: TIME
+            + average_trip_duration: DECIMAL(6,2)
+            + average_trip_cost: DECIMAL(12,0)
+            + total_distance_travelled: DECIMAL(10,2)
+            + frequent_locations: TEXT {JSON}
+            + avoid_locations: TEXT {JSON}
+            + preference_cost_vs_time: DECIMAL(3,2)
+            + model_version: VARCHAR(20)
+        }
+    }
+
+    package "Batch Tables" <<Frame>> #E1BEE7 {
+        class "driver_route_batches" as driver_route_batches <<TABLE>> #E1BEE7 {
+            + id: INT {PK, AUTO}
+            + driver_id: INT {FK -> drivers, NOT NULL}
+            + batch_name: VARCHAR(255)
+            + status: ENUM {proposed, accepted, rejected, completed, cancelled}
+            + total_revenue: DECIMAL(12,0)
+            + total_distance: DECIMAL(8,2)
+            + passenger_count: INT
+            + efficiency_score: DECIMAL(4,2)
+            + ai_confidence: DECIMAL(3,2)
+            + accepted_at: TIMESTAMP
+            + completed_at: TIMESTAMP
+        }
+
+        class "batch_passengers" as batch_passengers <<TABLE>> #E1BEE7 {
+            + id: INT {PK, AUTO}
+            + batch_id: INT {FK -> driver_route_batches, NOT NULL}
+            + passenger_id: INT {FK -> users, NOT NULL}
+            + original_ride_id: INT {FK -> rides, NOT NULL}
+            + pickup_order: INT
+            + dropoff_order: INT
+            + pickup_lat: DECIMAL(10,8)
+            + pickup_lng: DECIMAL(11,8)
+            + dropoff_lat: DECIMAL(10,8)
+            + dropoff_lng: DECIMAL(11,8)
+            + detour_km: DECIMAL(6,2)
+            + price_adjustment: DECIMAL(12,0)
+            + status: ENUM {pending, picked_up, dropped_off, cancelled}
+        }
+    }
+}
+
+' Relationships
+users ||--o| drivers : "1..1"
+users ||--o{ rides : "1..* passenger"
+drivers ||--o{ rides : "1..*"
+drivers ||--o{ driver_locations : "1..*"
+drivers ||--o{ earnings : "1..*"
+rides ||--o| earnings : "1..0..1"
+users ||--o{ ai_trip_schedules : "1..*"
+users ||--o| ai_learning_profiles : "1..0..1"
+ai_trip_schedules ||--o{ ai_waypoints : "1..*"
+ai_trip_schedules ||--o{ ai_route_alternatives : "1..*"
+drivers ||--o{ driver_route_batches : "1..*"
+driver_route_batches ||--o{ batch_passengers : "1..*"
+users ||--o{ batch_passengers : "1..*"
+rides ||--o{ batch_passengers : "1..*"
+
+legend right
+|= Color |= Group |
+|= <back:#FFCDD2>   </back> | Core Tables |
+|= <back:#C8E6C9>   </back> | AI Tables |
+|= <back:#E1BEE7>   </back> | Batch Tables |
+endlegend
+
+@enduml

@@ -1,0 +1,255 @@
+@startuml DoAn3_Android_Data_Layer
+
+title **DoAn3 - Android Data Layer**
+
+skinparam classAttributeIconSize 0
+skinparam maxMessageSize 150
+hide empty members
+
+package "com.laptrinhdidong.DoAn3.data" <<Frame>> #E3F2FD {
+
+    package "local" <<Frame>> #FFEBEE {
+        class "SessionManager" as SM <<Singleton>> #FFCDD2 {
+            + authToken: String?
+            + userId: Int
+            + userName: String?
+            + userType: String?
+            + isLoggedIn: Boolean
+            + isDriver: Boolean
+            + isPassenger: Boolean
+            --
+            + saveAuthToken(token): Void
+            + saveUser(id, name, email, type): Void
+            + getAuthToken(): String?
+            + getUser(): UserData?
+            + clearSession(): Void
+        }
+    }
+
+    package "remote" <<Frame>> #E8EAF6 {
+        class "RetrofitClient" as RC <<Object>> #C5CAE9 {
+            - loggingInterceptor: HttpLoggingInterceptor
+            - okHttpClient: OkHttpClient
+            - retrofit: Retrofit
+            + apiService: ApiService
+        }
+
+        class "SocketManager" as SockMgr <<Object>> #9FA8DA {
+            - socket: Socket?
+            + driverLocationFlow: SharedFlow<DriverLocationUpdate>
+            + rideStatusFlow: SharedFlow<RideStatusUpdate>
+            + connectionState: SharedFlow<Boolean>
+            --
+            + init(baseUrl): Void
+            + connect(token): Void
+            + disconnect(): Void
+            + emitLocationUpdate(lat, lng, rideId): Void
+            + joinRide(rideId): Void
+            + leaveRide(rideId): Void
+        }
+
+        interface "ApiService" as ApiSvc <<Interface>> #7986CB {
+            + register(RegisterRequest): Response<AuthResponse>
+            + login(LoginRequest): Response<AuthResponse>
+            + getCurrentUser(): Response<UserDto>
+            + getNearbyDrivers(lat, lng, radiusKm): Response<List<DriverDto>>
+            + requestRide(RideRequestDto): Response<RideDto>
+            + getRide(id): Response<RideDto>
+            + updateRideStatus(id, request): Response<RideDto>
+            + getRideHistory(): Response<List<RideDto>>
+            + rateRide(id, request): Response<RideDto>
+            + updateDriverLocation(request): Response<Unit>
+            + createAISchedule(request): Response<AIScheduleDto>
+            + getAISchedule(id): Response<AIScheduleDto>
+            + optimizeSchedule(id, request): Response<List<RouteAlternativeDto>>
+            + getAIProfile(): Response<AIProfileDto>
+            + updateAIProfile(request): Response<AIProfileDto>
+            + getAIRecommendations(): Response<AIRecommendationDto>
+            + getAvailableBatches(): Response<List<BatchDto>>
+            + acceptBatch(id): Response<BatchDto>
+            + getDriverProfile(): Response<DriverDto>
+            + updateDriverStatus(request): Response<DriverDto>
+            + getAvailableRides(): Response<List<RideDto>>
+            + acceptRide(id): Response<RideDto>
+            + getEarnings(from, to): Response<EarningsDto>
+            + getChatMessages(rideId): Response<List<ChatMessageDto>>
+            + sendChatMessage(rideId, body): Response<Map>
+        }
+
+        class "DriverLocationUpdate" as DLoc <<Data>> #B39DDB {
+            + lat: Double
+            + lng: Double
+            + rideId: Int
+            + timestamp: Long
+        }
+
+        class "RideStatusUpdate" as RStat <<Data>> #CE93D8 {
+            + rideId: Int
+            + status: String
+            + timestamp: Long
+        }
+    }
+
+    package "remote.dto" <<Frame>> #F3E5F5 {
+        class "RegisterRequest" as RegReq <<DTO>> #E1BEE7 {
+            + email: String
+            + password: String
+            + name: String
+            + phone: String
+            + userType: String
+        }
+        class "LoginRequest" as LogReq <<DTO>> #E1BEE7 {
+            + email: String
+            + password: String
+        }
+        class "AuthResponse" as AuthRes <<DTO>> #E1BEE7 {
+            + success: Boolean
+            + message: String?
+            + token: String?
+            + user: UserDto?
+        }
+        class "UserDto" as UserDto <<DTO>> #E1BEE7 {
+            + id: Int
+            + name: String?
+            + email: String?
+            + phone: String?
+            + userType: String?
+            + rating: Double?
+        }
+        class "DriverDto" as DriverDto <<DTO>> #E1BEE7 {
+            + id: Int
+            + name: String?
+            + rating: Double
+            + latitude: Double?
+            + longitude: Double?
+            + carModel: String?
+            + carColor: String?
+            + licensePlate: String?
+            + isAvailable: Boolean
+        }
+        class "RideDto" as RideDto <<DTO>> #E1BEE7 {
+            + id: Int
+            + passengerId: Int
+            + driverId: Int?
+            + pickupLat: Double
+            + destLat: Double
+            + distanceKm: Double
+            + price: Double
+            + status: String
+            + driverRating: Double?
+        }
+        class "RideRequestDto" as RideReq <<DTO>> #E1BEE7 {
+            + pickupLat: Double
+            + pickupLng: Double
+            + pickupAddress: String
+            + destLat: Double
+            + destLng: Double
+            + destAddress: String
+            + vehicleType: String
+        }
+        class "EarningsDto" as EarnDto <<DTO>> #E1BEE7 {
+            + todayEarnings: Double
+            + weekEarnings: Double
+            + monthEarnings: Double
+            + totalRides: Int
+        }
+        class "ChatMessageDto" as ChatDto <<DTO>> #E1BEE7 {
+            + id: Int
+            + rideId: Int
+            + senderId: Int
+            + senderType: String
+            + message: String
+            + createdAt: String
+        }
+        class "AIScheduleDto" as AISchDto <<DTO>> #E1BEE7 {
+            + id: Int
+            + userId: Int
+            + scheduleName: String
+            + status: String
+            + optimizationType: String
+            + aiConfidenceScore: Double?
+        }
+        class "BatchDto" as BatchDto <<DTO>> #E1BEE7 {
+            + id: Int
+            + driverId: Int
+            + status: String
+            + totalRevenue: Double?
+            + passengerCount: Int?
+        }
+    }
+
+    package "repository" <<Frame>> #FFF8E1 {
+        class "AuthRepository" as AuthRepo #FFE082 {
+            - sessionManager: SessionManager
+            - apiService: ApiService
+            --
+            + login(email, password): Result<AuthResponse>
+            + register(name, email, password, phone, userType): Result<AuthResponse>
+            + logout(): Void
+            + isLoggedIn(): Boolean
+            + isDriver(): Boolean
+        }
+        class "RideRepository" as RideRepo #FFE082 {
+            - apiService: ApiService
+            --
+            + requestRide(...): Result<RideDto>
+            + getRide(rideId): Result<RideDto>
+            + updateRideStatus(rideId, status): Result<RideDto>
+            + getNearbyDrivers(lat, lng): Result<List<DriverDto>>
+            + rateRide(rideId, rating, comment): Result<RideDto>
+            + getRideHistory(): Result<List<RideDto>>
+            + getChatMessages(rideId): Result<List<ChatMessageDto>>
+            + sendChatMessage(rideId, message): Result<Unit>
+        }
+        class "DriverRepository" as DriverRepo #FFE082 {
+            - apiService: ApiService
+            --
+            + getDriverProfile(): Result<DriverDto>
+            + updateDriverStatus(isAvailable, lat, lng): Result<DriverDto>
+            + getAvailableRides(): Result<List<RideDto>>
+            + acceptRide(rideId): Result<RideDto>
+            + getEarnings(fromDate, toDate): Result<EarningsDto>
+            + getAvailableBatches(): Result<List<BatchDto>>
+            + acceptBatch(batchId): Result<BatchDto>
+        }
+        class "AIRepository" as AIRepo #FFE082 {
+            - apiService: ApiService
+            --
+            + getAIHistory(): Result<List<AIScheduleDto>>
+            + createSchedule(name, date, waypoints): Result<AIScheduleDto>
+            + getSchedule(scheduleId): Result<AIScheduleDto>
+            + optimizeSchedule(scheduleId, type): Result<List<RouteAlternativeDto>>
+            + getAIRecommendations(): Result<AIRecommendationDto>
+        }
+    }
+}
+
+' Relationships
+RC ..> ApiSvc : implements
+AuthRepo --> SM
+AuthRepo --> ApiSvc
+RideRepo --> ApiSvc
+DriverRepo --> ApiSvc
+AIRepo --> ApiSvc
+SockMgr ..> DLoc
+SockMgr ..> RStat
+ApiSvc ..> RegReq
+ApiSvc ..> LogReq
+ApiSvc ..> AuthRes
+ApiSvc ..> UserDto
+ApiSvc ..> DriverDto
+ApiSvc ..> RideDto
+ApiSvc ..> EarnDto
+ApiSvc ..> ChatDto
+ApiSvc ..> AISchDto
+ApiSvc ..> BatchDto
+
+legend right
+|= Color |= Layer |
+|= <back:#FFEBEE>   </back> | Local Storage |
+|= <back:#E8EAF6>   </back> | Network |
+|= <back:#F3E5F5>   </back> | DTOs |
+|= <back:#FFF8E1>   </back> | Repositories |
+endlegend
+
+@enduml
