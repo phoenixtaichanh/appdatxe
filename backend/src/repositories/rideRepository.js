@@ -72,7 +72,7 @@ async function assignDriver(rideId, driverId) {
     await pool.query('UPDATE rides SET driver_id = ? WHERE id = ?', [driverId, rideId]);
 }
 
-async function rate(id, { rating, comment, raterType }) {
+async function rate(id, { rating, comment, raterType, tags }) {
     const field = raterType === 'passenger' ? 'driver_rating' : 'passenger_rating';
     const commentField = raterType === 'passenger' ? 'rating_comment' : null;
 
@@ -88,6 +88,14 @@ async function rate(id, { rating, comment, raterType }) {
     params.push(id);
 
     await pool.query(query, params);
+
+    // Save rating tags if provided
+    if (raterType === 'passenger' && tags && tags.length > 0) {
+        await pool.query(
+            'INSERT INTO ride_rating_tags (ride_id, tag) VALUES ?',
+            tags.map(tag => [id, tag])
+        );
+    }
 
     if (raterType === 'passenger') {
         const [ride] = await pool.query('SELECT driver_id FROM rides WHERE id = ?', [id]);
@@ -105,4 +113,16 @@ async function rate(id, { rating, comment, raterType }) {
     return findById(id);
 }
 
-module.exports = { create, findById, findHistoryByUser, findActiveByUser, updateStatus, assignDriver, rate };
+async function rateWithTags(id, { rating, comment, raterType, tags }) {
+    const result = await rate(id, { rating, comment, raterType, tags });
+    if (raterType === 'passenger' && tags && tags.length > 0) {
+        const [savedTags] = await pool.query(
+            'SELECT tag FROM ride_rating_tags WHERE ride_id = ?',
+            [id]
+        );
+        result.tags = savedTags.map(t => t.tag);
+    }
+    return result;
+}
+
+module.exports = { create, findById, findHistoryByUser, findActiveByUser, updateStatus, assignDriver, rate, rateWithTags };

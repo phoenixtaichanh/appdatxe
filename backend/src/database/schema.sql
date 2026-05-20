@@ -266,3 +266,93 @@ BEGIN
 END//
 
 DELIMITER ;
+
+-- =====================================================
+-- ADDITIONAL TABLES
+-- =====================================================
+
+-- ride_rating_tags: Tags for ride ratings (enhanced rating)
+CREATE TABLE IF NOT EXISTS ride_rating_tags (
+    id              INT AUTO_INCREMENT PRIMARY KEY,
+    ride_id         INT NOT NULL,
+    tag             VARCHAR(100) NOT NULL,
+    created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (ride_id) REFERENCES rides(id) ON DELETE CASCADE,
+    INDEX idx_ride (ride_id),
+    INDEX idx_tag (tag)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- cancellation_log: Log of ride cancellations with reasons
+CREATE TABLE IF NOT EXISTS cancellation_log (
+    id              INT AUTO_INCREMENT PRIMARY KEY,
+    ride_id         INT NOT NULL,
+    cancelled_by    ENUM('passenger', 'driver', 'system') NOT NULL,
+    user_id         INT NOT NULL,
+    reason          VARCHAR(255) DEFAULT NULL,
+    cancellation_fee DECIMAL(12,0) DEFAULT 0,
+    created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (ride_id) REFERENCES rides(id) ON DELETE CASCADE,
+    INDEX idx_ride (ride_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ride_images: Images related to rides (damage claims, receipts)
+CREATE TABLE IF NOT EXISTS ride_images (
+    id              INT AUTO_INCREMENT PRIMARY KEY,
+    ride_id         INT NOT NULL,
+    image_url       VARCHAR(500) NOT NULL,
+    image_type      ENUM('damage', 'receipt', 'other') DEFAULT 'other',
+    uploaded_by     INT NOT NULL,
+    created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (ride_id) REFERENCES rides(id) ON DELETE CASCADE,
+    INDEX idx_ride (ride_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- password_resets: OTP codes for password reset
+CREATE TABLE IF NOT EXISTS password_resets (
+    id              INT AUTO_INCREMENT PRIMARY KEY,
+    email           VARCHAR(255) NOT NULL,
+    otp_code        VARCHAR(6) NOT NULL,
+    expires_at      TIMESTAMP NOT NULL,
+    is_used         BOOLEAN DEFAULT FALSE,
+    used_at         TIMESTAMP NULL DEFAULT NULL,
+    created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_email (email),
+    INDEX idx_otp (otp_code),
+    INDEX idx_expires (expires_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- transactions: Payment transactions (VNPay, MoMo, Cash, Wallet)
+CREATE TABLE IF NOT EXISTS transactions (
+    id              INT AUTO_INCREMENT PRIMARY KEY,
+    user_id         INT NOT NULL,
+    ride_id         INT DEFAULT NULL,
+    type            ENUM('income', 'expense', 'refund', 'bonus', 'penalty') DEFAULT 'income',
+    category        VARCHAR(50) DEFAULT NULL COMMENT 'ride_fare, cancellation_fee, bonus, etc.',
+    amount          DECIMAL(12, 0) NOT NULL,
+    payment_method  ENUM('cash', 'wallet', 'vnpay', 'momo') DEFAULT 'cash',
+    status          ENUM('pending', 'completed', 'failed', 'refunded', 'cancelled') DEFAULT 'pending',
+    description     VARCHAR(500) DEFAULT NULL,
+    payment_ref     VARCHAR(255) DEFAULT NULL COMMENT 'VNPay/MoMo transaction reference',
+    created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (ride_id) REFERENCES rides(id) ON DELETE SET NULL,
+    INDEX idx_user (user_id),
+    INDEX idx_ride (ride_id),
+    INDEX idx_status (status),
+    INDEX idx_created (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- user_fcm_tokens: FCM push notification tokens
+CREATE TABLE IF NOT EXISTS user_fcm_tokens (
+    id              INT AUTO_INCREMENT PRIMARY KEY,
+    user_id         INT NOT NULL,
+    fcm_token       VARCHAR(500) NOT NULL,
+    device_id       VARCHAR(255) DEFAULT NULL,
+    is_active       BOOLEAN DEFAULT TRUE,
+    created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_user (user_id),
+    UNIQUE INDEX idx_token (fcm_token(255))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

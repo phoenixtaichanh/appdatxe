@@ -11,9 +11,17 @@ class AuthInterceptor @Inject constructor(
     override fun intercept(chain: Interceptor.Chain): Response {
         val originalRequest = chain.request()
 
-        // Skip auth header for login/register endpoints
+        // Skip auth header for login/register and password reset endpoints
         val path = originalRequest.url.encodedPath
-        if (path.contains("/auth/login") || path.contains("/auth/register")) {
+        val noAuthPaths = listOf(
+            "/auth/login",
+            "/auth/register",
+            "/auth/forgot-password",
+            "/auth/verify-otp",
+            "/auth/reset-password",
+            "/auth/resend-otp"
+        )
+        if (noAuthPaths.any { path.contains(it) }) {
             return chain.proceed(originalRequest)
         }
 

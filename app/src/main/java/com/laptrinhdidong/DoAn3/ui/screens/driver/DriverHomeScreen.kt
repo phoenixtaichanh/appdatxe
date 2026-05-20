@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -270,6 +271,9 @@ fun DriverHomeScreen(
                     }
                     IconButton(onClick = onNavigateToProfile) {
                         Icon(Icons.Default.Person, "Profile", tint = TextPrimary)
+                    }
+                    IconButton(onClick = onLogout) {
+                        Icon(Icons.AutoMirrored.Filled.Logout, "Logout", tint = AccentRed)
                     }
                 }
             }
@@ -681,26 +685,26 @@ private fun CurrentRideCard(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                OutlinedButton(
-                    onClick = onNavigateToPickup,
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = AccentGreen)
-                ) {
-                    Icon(Icons.Default.NearMe, null, modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("Den diem don", fontSize = 12.sp)
-                }
-                OutlinedButton(
-                    onClick = onNavigateToDropoff,
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = AccentRed)
-                ) {
-                    Icon(Icons.Default.Navigation, null, modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("Den diem den", fontSize = 12.sp)
-                }
+                    OutlinedButton(
+                        onClick = onNavigateToPickup,
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = AccentGreen)
+                    ) {
+                        Icon(Icons.Default.NearMe, null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Den diem don", fontSize = 12.sp)
+                    }
+                    OutlinedButton(
+                        onClick = onNavigateToDropoff,
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = AccentRed)
+                    ) {
+                        Icon(Icons.Default.Navigation, null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Den diem den", fontSize = 12.sp)
+                    }
             }
 
             Spacer(modifier = Modifier.height(16.dp))

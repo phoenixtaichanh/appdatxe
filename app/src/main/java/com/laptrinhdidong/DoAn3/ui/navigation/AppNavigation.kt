@@ -26,6 +26,9 @@ import com.laptrinhdidong.DoAn3.ui.screens.HistoryScreen
 import com.laptrinhdidong.DoAn3.ui.screens.ProfileScreen
 import com.laptrinhdidong.DoAn3.ui.screens.RideDetailScreen
 import com.laptrinhdidong.DoAn3.ui.screens.auth.AuthScreen
+import com.laptrinhdidong.DoAn3.ui.screens.auth.ForgotPasswordScreen
+import com.laptrinhdidong.DoAn3.ui.screens.auth.OtpVerificationScreen
+import com.laptrinhdidong.DoAn3.ui.screens.auth.ResetPasswordScreen
 import com.laptrinhdidong.DoAn3.ui.screens.splash.SplashScreen
 import com.laptrinhdidong.DoAn3.ui.screens.splash.SplashDestination
 import com.laptrinhdidong.DoAn3.ui.screens.splash.SplashViewModel
@@ -67,6 +70,13 @@ sealed class Screen(val route: String) {
     object AIRecommendations : Screen("ai_recommendations")
     object Earnings : Screen("earnings")
     object AIChat : Screen("ai_chat")
+    object ForgotPassword : Screen("forgot_password")
+    object OtpVerification : Screen("otp_verification/{email}/{devOtp}") {
+        fun createRoute(email: String, devOtp: String?) = "otp_verification/$email/${devOtp ?: "none"}"
+    }
+    object ResetPassword : Screen("reset_password/{email}/{otp}") {
+        fun createRoute(email: String, otp: String) = "reset_password/$email/$otp"
+    }
 }
 
 @HiltViewModel
@@ -142,6 +152,9 @@ fun AppNavigation(
                     navController.navigate(destination) {
                         popUpTo(Screen.Auth.route) { inclusive = true }
                     }
+                },
+                onNavigateToForgotPassword = {
+                    navController.navigate(Screen.ForgotPassword.route)
                 }
             )
         }
@@ -298,6 +311,61 @@ fun AppNavigation(
         composable(Screen.Earnings.route) {
             EarningsScreen(
                 onBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(Screen.ForgotPassword.route) {
+            ForgotPasswordScreen(
+                onBack = { navController.popBackStack() },
+                onEmailSent = { email, devOtp ->
+                    navController.navigate(Screen.OtpVerification.createRoute(email, devOtp))
+                }
+            )
+        }
+
+        composable(
+            route = Screen.OtpVerification.route,
+            arguments = listOf(
+                navArgument("email") { type = NavType.StringType },
+                navArgument("devOtp") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val email = java.net.URLDecoder.decode(
+                backStackEntry.arguments?.getString("email") ?: "", "UTF-8"
+            )
+            val devOtp = backStackEntry.arguments?.getString("devOtp")?.takeIf { it != "none" }
+            OtpVerificationScreen(
+                email = email,
+                devOtp = devOtp,
+                onBack = { navController.popBackStack() },
+                onVerified = { verifiedEmail, otp ->
+                    navController.navigate(Screen.ResetPassword.createRoute(verifiedEmail, otp)) {
+                        popUpTo(Screen.ForgotPassword.route) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        composable(
+            route = Screen.ResetPassword.route,
+            arguments = listOf(
+                navArgument("email") { type = NavType.StringType },
+                navArgument("otp") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val email = java.net.URLDecoder.decode(
+                backStackEntry.arguments?.getString("email") ?: "", "UTF-8"
+            )
+            val otp = backStackEntry.arguments?.getString("otp") ?: ""
+            ResetPasswordScreen(
+                email = email,
+                otp = otp,
+                onBack = { navController.popBackStack() },
+                onSuccess = {
+                    navController.navigate(Screen.Auth.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
             )
         }
     }

@@ -20,12 +20,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import java.text.NumberFormat
+import java.util.Locale
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.laptrinhdidong.DoAn3.data.remote.dto.DriverDto
 import com.laptrinhdidong.DoAn3.data.remote.dto.RideDto
 import com.laptrinhdidong.DoAn3.data.repository.DriverRepository
+import com.laptrinhdidong.DoAn3.data.repository.PaymentRepository
 import com.laptrinhdidong.DoAn3.data.repository.RideRepository
 import com.laptrinhdidong.DoAn3.ui.components.*
 import com.laptrinhdidong.DoAn3.ui.theme.*
@@ -40,13 +43,19 @@ data class RideDetailState(
     val ride: RideDto? = null,
     val driver: DriverDto? = null,
     val errorMessage: String? = null,
-    val ratingSubmitted: Boolean = false
+    val ratingSubmitted: Boolean = false,
+    val selectedPaymentMethod: String = "cash",
+    val paymentCreating: Boolean = false,
+    val paymentCreated: Boolean = false,
+    val paymentUrl: String? = null,
+    val paymentError: String? = null
 )
 
 @dagger.hilt.android.lifecycle.HiltViewModel
 class RideDetailViewModel @javax.inject.Inject constructor(
     private val rideRepository: RideRepository,
-    private val driverRepository: DriverRepository
+    private val driverRepository: DriverRepository,
+    private val paymentRepository: PaymentRepository
 ) : ViewModel() {
 
     private var rideId: Int = -1
@@ -102,6 +111,45 @@ class RideDetailViewModel @javax.inject.Inject constructor(
                 _state.value = _state.value.copy(isLoading = false, errorMessage = "Gửi đánh giá thất bại")
             }
         }
+    }
+
+    fun selectPaymentMethod(method: String) {
+        _state.value = _state.value.copy(selectedPaymentMethod = method)
+    }
+
+    fun createPayment() {
+        viewModelScope.launch {
+            _state.value = _state.value.copy(paymentCreating = true, paymentError = null)
+            val result = paymentRepository.createPayment(rideId, _state.value.selectedPaymentMethod)
+            result.onSuccess { response ->
+                val paymentData = response.data
+                if (paymentData != null) {
+                    _state.value = _state.value.copy(
+                        paymentCreating = false,
+                        paymentCreated = true,
+                        paymentUrl = paymentData.paymentUrl
+                    )
+                } else {
+                    _state.value = _state.value.copy(
+                        paymentCreating = false,
+                        paymentError = "Tạo thanh toán thất bại"
+                    )
+                }
+            }.onFailure { e ->
+                _state.value = _state.value.copy(
+                    paymentCreating = false,
+                    paymentError = e.message ?: "Tạo thanh toán thất bại"
+                )
+            }
+        }
+    }
+
+    fun clearPaymentError() {
+        _state.value = _state.value.copy(paymentError = null)
+    }
+
+    fun clearPaymentCreated() {
+        _state.value = _state.value.copy(paymentCreated = false, paymentUrl = null)
     }
 }
 
@@ -242,8 +290,8 @@ fun RideDetailScreen(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Payment method (only for passengers with active/completed rides)
-                    if (!isDriverView && (ride.status == "pending" || ride.status == "in_progress")) {
+                    // Payment method (only for passengers with pending rides)
+                    if (!isDriverView && ride.status == "pending") {
                         Card(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(20.dp),
@@ -256,27 +304,56 @@ fun RideDetailScreen(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                                 ) {
-                                    PaymentMethodChip(
-                                        icon = Icons.Default.Money,
-                                        label = "Tien mat",
-                                        isSelected = true,
-                                        onClick = { },
-                                        modifier = Modifier.weight(1f)
+                                    val paymentMethods = listOf(
+                                        Triple("cash", "Tien mat", Icons.Default.Money),
+                                        Triple("momo", "MoMo", Icons.Default.PhoneAndroid),
+                                        Triple("vnpay", "VNPay", Icons.Default.CreditCard),
                                     )
-                                    PaymentMethodChip(
-                                        icon = Icons.Default.AccountBalanceWallet,
-                                        label = "Vi dien tu",
-                                        isSelected = false,
-                                        onClick = { },
-                                        modifier = Modifier.weight(1f)
+                                    paymentMethods.forEach { (code, label, icon) ->
+                                        val isSelected = state.selectedPaymentMethod == code
+                                        PaymentMethodChip(
+                                            icon = icon,
+                                            label = label,
+                                            isSelected = isSelected,
+                                            onClick = { viewModel.selectPaymentMethod(code) },
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                    }
+                                }
+
+                                if (!state.paymentCreated) {
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                    val priceText = NumberFormat.getCurrencyInstance(Locale("vi", "VN"))
+                                        .format(ride.price)
+                                    GradientButton(
+                                        text = if (state.paymentCreating) "Dang xu li..." else "Xac nhan thanh toan $priceText",
+                                        onClick = { viewModel.createPayment() },
+                                        enabled = !state.paymentCreating,
+                                        isLoading = state.paymentCreating
                                     )
-                                    PaymentMethodChip(
-                                        icon = Icons.Default.CreditCard,
-                                        label = "The ngan hang",
-                                        isSelected = false,
-                                        onClick = { },
-                                        modifier = Modifier.weight(1f)
-                                    )
+                                } else {
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.Center,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(
+                                            Icons.Default.CheckCircle,
+                                            null,
+                                            tint = AccentGreen,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(
+                                            if (state.selectedPaymentMethod == "cash")
+                                                "Thanh toan tien mat"
+                                            else
+                                                "Da tao thanh toan",
+                                            color = AccentGreen,
+                                            fontWeight = FontWeight.Medium
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -388,6 +465,21 @@ fun RideDetailScreen(
         if (state.isLoading) {
             LoadingOverlay()
         }
+
+        // Payment error snackbar
+        val snackbarHostState = remember { SnackbarHostState() }
+        LaunchedEffect(state.paymentError) {
+            state.paymentError?.let {
+                snackbarHostState.showSnackbar(it)
+                viewModel.clearPaymentError()
+            }
+        }
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 16.dp)
+        )
     }
 
     // Rating dialog

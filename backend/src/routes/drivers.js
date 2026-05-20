@@ -178,7 +178,62 @@ router.get('/earnings', auth, requireDriver, async (req, res, next) => {
         const toDate = to || new Date().toISOString().split('T')[0];
 
         const earnings = await driverRepository.getEarnings(req.user.id, fromDate, toDate);
-        res.json({ success: true, data: earnings });
+
+        // Get daily breakdown for chart (last 30 days)
+        const [dailyRows] = await pool.query(`
+            SELECT
+                DATE(created_at) as date,
+                COALESCE(SUM(amount), 0) as amount,
+                COUNT(*) as ride_count
+            FROM earnings
+            WHERE driver_id = ?
+              AND type = 'ride'
+              AND created_at BETWEEN ? AND ?
+            GROUP BY DATE(created_at)
+            ORDER BY date ASC
+        `, [req.user.id, fromDate, toDate]);
+
+        // Get week comparison (current vs last week)
+        const [weekCompare] = await pool.query(`
+            SELECT
+                COALESCE(SUM(CASE WHEN YEARWEEK(created_at) = YEARWEEK(CURDATE()) THEN amount ELSE 0 END), 0) as this_week,
+                COALESCE(SUM(CASE WHEN YEARWEEK(created_at) = YEARWEEK(DATE_SUB(CURDATE(), INTERVAL 1 WEEK)) THEN amount ELSE 0 END), 0) as last_week
+            FROM earnings
+            WHERE driver_id = ? AND type = 'ride'
+        `, [req.user.id]);
+
+        // Get ride stats
+        const [rideStats] = await pool.query(`
+            SELECT
+                COUNT(*) as total_rides,
+                COALESCE(AVG(driver_rating), 0) as avg_rating,
+                COALESCE(SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END), 0) as completed,
+                COALESCE(SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END), 0) as cancelled
+            FROM rides
+            WHERE driver_id = ?
+        `, [req.user.id]);
+
+        res.json({
+            success: true,
+            data: {
+                summary: earnings,
+                daily: dailyRows.map(r => ({
+                    date: r.date instanceof Date ? r.date.toISOString().split('T')[0] : r.date,
+                    amount: parseFloat(r.amount),
+                    ride_count: r.ride_count
+                })),
+                comparison: {
+                    this_week: parseFloat(weekCompare[0]?.this_week || 0),
+                    last_week: parseFloat(weekCompare[0]?.last_week || 0)
+                },
+                stats: {
+                    total_rides: parseInt(rideStats[0]?.total_rides || 0),
+                    avg_rating: parseFloat(rideStats[0]?.avg_rating || 0).toFixed(2),
+                    completed: parseInt(rideStats[0]?.completed || 0),
+                    cancelled: parseInt(rideStats[0]?.cancelled || 0)
+                }
+            }
+        });
     } catch (error) {
         next(error);
     }

@@ -11,6 +11,8 @@ const driverRoutes = require('./routes/drivers');
 const locationRoutes = require('./routes/locations');
 const aiRoutes = require('./routes/ai');
 const chatRoutes = require('./routes/chat');
+const paymentRoutes = require('./routes/payments');
+const adminRoutes = require('./routes/admin');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -39,7 +41,10 @@ app.get('/', (req, res) => {
             rides: '/api/rides',
             driver: '/api/driver',
             location: '/api/location',
-            ai: '/api/ai'
+            ai: '/api/ai',
+            chat: '/api/chat',
+            payments: '/api/payments',
+            admin: '/api/admin'
         },
         websocket: 'Socket.IO connected on same port'
     });
@@ -53,6 +58,8 @@ app.use('/api/driver', driverRoutes);
 app.use('/api/location', locationRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/chat', chatRoutes.router);
+app.use('/api/payments', paymentRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

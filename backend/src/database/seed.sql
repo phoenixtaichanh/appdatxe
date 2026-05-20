@@ -8,14 +8,14 @@ USE doan3_db;
 -- =====================================================
 -- TEST USERS
 -- Password for all: password123
--- Generated hash: $2a$10$O4ybrThFykUGyJug0Yar.uSEMlYPqPS8TriozRsmiVmpzI4ngeTc.
+-- Generated hash: $2a$10$uev3Pu1uftt1hD5OeSi7auSwi2yupqUp6857/CQsAwZg9Ngi4kef6
 -- =====================================================
 
 -- Passenger test account
 INSERT INTO users (email, password, name, phone, user_type, rating, total_rides)
 VALUES (
     'passenger@test.com',
-    '$2a$10$O4ybrThFykUGyJug0Yar.uSEMlYPqPS8TriozRsmiVmpzI4ngeTc.',
+    '$2a$10$uev3Pu1uftt1hD5OeSi7auSwi2yupqUp6857/CQsAwZg9Ngi4kef6',
     'Nguyễn Văn Test',
     '0909123456',
     'passenger',
@@ -27,7 +27,7 @@ VALUES (
 INSERT INTO users (email, password, name, phone, user_type, rating, total_rides)
 VALUES (
     'driver1@test.com',
-    '$2a$10$O4ybrThFykUGyJug0Yar.uSEMlYPqPS8TriozRsmiVmpzI4ngeTc.',
+    '$2a$10$uev3Pu1uftt1hD5OeSi7auSwi2yupqUp6857/CQsAwZg9Ngi4kef6',
     'Trần Văn Tài 1',
     '0909234567',
     'driver',
@@ -39,7 +39,7 @@ VALUES (
 INSERT INTO users (email, password, name, phone, user_type, rating, total_rides)
 VALUES (
     'driver2@test.com',
-    '$2a$10$O4ybrThFykUGyJug0Yar.uSEMlYPqPS8TriozRsmiVmpzI4ngeTc.',
+    '$2a$10$uev3Pu1uftt1hD5OeSi7auSwi2yupqUp6857/CQsAwZg9Ngi4kef6',
     'Lê Thị Xe 2',
     '0909345678',
     'driver',
@@ -51,7 +51,7 @@ VALUES (
 INSERT INTO users (email, password, name, phone, user_type, rating, total_rides)
 VALUES (
     'driver3@test.com',
-    '$2a$10$O4ybrThFykUGyJug0Yar.uSEMlYPqPS8TriozRsmiVmpzI4ngeTc.',
+    '$2a$10$uev3Pu1uftt1hD5OeSi7auSwi2yupqUp6857/CQsAwZg9Ngi4kef6',
     'Phạm Xuân Lái 3',
     '0909456789',
     'driver',
@@ -114,6 +114,15 @@ VALUES
     (2, '06:00:00', '22:00:00', 0, 0, 0, 0.50, 'v1.0'),
     (3, '06:00:00', '22:00:00', 0, 0, 0, 0.50, 'v1.0'),
     (4, '06:00:00', '22:00:00', 0, 0, 0, 0.50, 'v1.0');
+
+-- =====================================================
+-- ADMIN / STAFF USERS
+-- =====================================================
+
+INSERT INTO users (email, password, name, phone, user_type, rating, total_rides)
+VALUES
+    ('admin@test.com', '$2a$10$uev3Pu1uftt1hD5OeSi7auSwi2yupqUp6857/CQsAwZg9Ngi4kef6', 'Quan Tri Vien', '0909000001', 'owner', 5.00, 0),
+    ('manager@test.com', '$2a$10$uev3Pu1uftt1hD5OeSi7auSwi2yupqUp6857/CQsAwZg9Ngi4kef6', 'Nhan Vien Quan Ly', '0909000002', 'revenue_manager', 5.00, 0);
 
 -- =====================================================
 -- EARNINGS (cho driver)

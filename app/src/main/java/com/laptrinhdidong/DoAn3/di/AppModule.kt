@@ -8,6 +8,8 @@ import com.laptrinhdidong.DoAn3.data.remote.ApiService
 import com.laptrinhdidong.DoAn3.data.repository.AIRepository
 import com.laptrinhdidong.DoAn3.data.repository.AuthRepository
 import com.laptrinhdidong.DoAn3.data.repository.DriverRepository
+import com.laptrinhdidong.DoAn3.data.repository.PasswordResetRepository
+import com.laptrinhdidong.DoAn3.data.repository.PaymentRepository
 import com.laptrinhdidong.DoAn3.data.repository.RideRepository
 import dagger.Module
 import dagger.Provides
@@ -105,5 +107,17 @@ object AppModule {
     @Singleton
     fun provideAIRepository(apiService: ApiService): AIRepository {
         return AIRepository(apiService)
+    }
+
+    @Provides
+    @Singleton
+    fun providePasswordResetRepository(apiService: ApiService): PasswordResetRepository {
+        return PasswordResetRepository(apiService)
+    }
+
+    @Provides
+    @Singleton
+    fun providePaymentRepository(apiService: ApiService): PaymentRepository {
+        return PaymentRepository(apiService)
     }
 }

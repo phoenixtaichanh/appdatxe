@@ -1,578 +1,907 @@
-# DoAn3 - Smart Ride Booking System with AI Travel Assistant
-
-> **Phiên bản:** 1.0.1 | **Ngày cập nhật:** 2026-05-10
-> **Trạng thái:** Backend 100% | Android 100% | BUILD SUCCESSFUL, 0 warnings
-> **Tác giả:** Lê Đăng Khoa, Trần Nguyễn Tuấn Anh
-> **Trường:** Đại học Bách Khoa TP.HCM (HUTECH)
-> **App ID:** `com.laptrinhdidong.DoAn3`
-
----
-
-## Mục lục
-
-1. [Tổng quan dự án](#1-tổng-quan-dự-án)
-2. [Công nghệ sử dụng](#2-công-nghệ-sử-dụng)
-3. [Cấu trúc dự án](#3-cấu-trúc-dự-án)
-4. [Tính năng](#4-tính-năng)
-5. [Database Schema](#5-database-schema)
-6. [API Endpoints](#6-api-endpoints)
-7. [Cấu hình](#7-cấu-hình)
-8. [Tài khoản test](#8-tài-khoản-test)
-9. [Hướng dẫn cài đặt](#9-hướng-dẫn-cài-đặt)
-
----
-
-## 1. Tổng quan dự án
-
-**DoAn3** là một ứng dụng di động **đặt xe trực tuyến** (ride-hailing, giống Uber) kết hợp tính năng **trợ lý du lịch AI**. Người dùng có thể đặt xe máy, xe 4 chỗ hoặc xe 7 chỗ, đồng thời sử dụng các tính năng AI để lập kế hoạch hành trình, tối ưu tuyến đường và nhận đề xuất cá nhân hóa.
-
-### 1.1 Các loại người dùng
-
-| Loại | Mô tả |
-|------|-------|
-| **Passenger** (Hành khách) | Đặt xe, theo dõi chuyến, đánh giá tài xế |
-| **Driver** (Tài xế) | Nhận yêu cầu, cập nhật trạng thái, xem thu nhập |
-| **Owner** (Chủ xe) | Quản lý phương tiện |
-| **Admin** (Quản trị) | Quản lý hệ thống |
-
----
-
-## 2. Công nghệ sử dụng
-
-### 2.1 Frontend (Android)
-
-| Thành phần | Công nghệ |
-|------------|-----------|
-| Ngôn ngữ | Kotlin |
-| UI Framework | Jetpack Compose + Material Design 3 |
-| Architecture | MVVM + Clean Architecture |
-| Dependency Injection | Hilt |
-| Networking | Retrofit + OkHttp + Gson |
-| Async | Kotlin Coroutines + Flow |
-| Navigation | Jetpack Navigation Compose |
-| Local Storage | SharedPreferences (SessionManager) |
-| Min SDK | 24 (Android 7.0) |
-| Target SDK | 36 |
-
-### 2.2 Backend
-
-| Thành phần | Công nghệ |
-|------------|-----------|
-| Runtime | Node.js |
-| Framework | Express.js |
-| Database | MySQL 8.0 |
-| Authentication | JWT (JSON Web Tokens) |
-| Password Hashing | bcryptjs |
-| Dev Server | nodemon |
-
----
-
-## 3. Cấu trúc dự án
-
-### 3.1 Backend (`/backend`)
-
-```
-backend/
-├── src/
-│   ├── index.js              # Express app entry point (port 3000)
-│   ├── database/
-│   │   ├── db.js             # MySQL connection pool
-│   │   ├── schema.sql        # 11 tables (core + AI)
-│   │   ├── seed.sql          # Test data
-│   │   └── fix_password.js   # Password hash fix script
-│   ├── routes/
-│   │   ├── auth.js           # Login/Register
-│   │   ├── users.js          # User management
-│   │   ├── rides.js          # Ride operations
-│   │   ├── drivers.js        # Driver features
-│   │   ├── locations.js      # Location services
-│   │   └── ai.js             # AI schedule & batch
-│   ├── middleware/
-│   │   └── auth.js           # JWT verification
-│   └── repositories/         # Data access layer
-├── package.json
-└── .env
-```
-
-### 3.2 Android App (`/app`)
-
-```
-app/src/main/java/com/laptrinhdidong/DoAn3/
-├── MainActivity.kt
-├── DoAn3Application.kt       # Hilt Application
-├── AppConfig.kt              # BASE_URL configuration
-├── data/
-│   ├── local/
-│   │   └── SessionManager.kt # SharedPreferences
-│   ├── remote/
-│   │   ├── RetrofitClient.kt  # HTTP client setup
-│   │   ├── ApiService.kt     # API endpoints interface
-│   │   └── dto/              # Request/Response DTOs
-│   └── repository/           # Repository pattern
-├── di/
-│   └── AppModule.kt          # Hilt modules
-└── ui/
-    ├── theme/               # Material3 theming
-    ├── components/          # Reusable UI components
-    ├── navigation/
-    │   └── AppNavigation.kt
-    └── screens/
-        ├── auth/            # Login/Register
-        ├── splash/          # Splash with auto-login
-        ├── passenger/       # Passenger features
-        ├── driver/          # Driver features
-        └── ai/              # AI features
-```
-
----
-
-## 4. Tính năng
-
-### 4.1 Xác thực người dùng
-
-- Đăng nhập / Đăng ký với phân loại hành khách / tài xế
-- JWT token-based authentication (thời hạn 30 ngày)
-- Validation form real-time
-- Chỉ báo độ mạnh mật khẩu
-- Animated gradient UI
-- Auto-login từ Splash screen
-
-### 4.2 Tính năng hành khách
-
-| Tính năng | Mô tả |
-|-----------|-------|
-| **Đặt xe** | Chọn điểm đón, điểm đến, loại xe (xe máy, 4 chỗ, 7 chỗ) |
-| **Theo dõi chuyến** | Trạng thái: pending → accepted → arrived → in_progress → completed |
-| **Đánh giá** | Rate tài xế 1-5 sao kèm bình luận |
-| **Lịch sử chuyến đi** | Xem danh sách chuyến đã hoàn thành, có bộ lọc |
-| **Quản lý hồ sơ** | Cập nhật thông tin cá nhân |
-
-### 4.3 Tính năng tài xế
-
-| Tính năng | Mô tả |
-|-----------|-------|
-| **Online/Offline** | Bật/tắt trạng thái nhận chuyến |
-| **Nhận chuyến** | Xem danh sách yêu cầu, chấp nhận hoặc từ chối |
-| **Cập nhật trạng thái** | Đánh dấu đã đến, bắt đầu, hoàn thành chuyến |
-| **Thu nhập** | Xem thu nhập theo ngày, tuần, tháng, tổng |
-| **Lịch sử chuyến đi** | Xem danh sách chuyến đã hoàn thành |
-| **Quản lý hồ sơ** | Cập nhật thông tin xe |
-
-### 4.4 Tính năng AI
-
-| Tính năng | Mô tả |
-|-----------|-------|
-| **AI Trip Scheduler** | Tạo lịch trình nhiều điểm dừng, tối ưu theo thời gian / chi phí / cân bằng |
-| **AI Route Alternatives** | Đề xuất các tuyến đường thay thế với các kịch bản giao thông |
-| **AI Learning Profile** | Ghi nhận thời gian di chuyển ưa thích, slider chi phí/thời gian, địa điểm thường đến |
-| **Ride Batching (tài xế)** | AI đề xuất nhóm hành khách tối ưu hóa, chấm điểm hiệu quả |
-| **Personalized Recommendations** | Tuyến đường thường dùng, thời gian tốt nhất, tiết kiệm chi phí |
-
----
-
-## 5. Database Schema
-
-### 5.1 Bảng cốt lõi
-
-#### `users` - Tài khoản người dùng
-
-| Column | Type | Mô tả |
-|--------|------|-------|
-| `id` | INT PRIMARY KEY | ID người dùng |
-| `email` | VARCHAR(255) UNIQUE | Email đăng nhập |
-| `password_hash` | VARCHAR(255) | Mật khẩu đã mã hóa |
-| `full_name` | VARCHAR(255) | Họ tên đầy đủ |
-| `phone` | VARCHAR(20) | Số điện thoại |
-| `user_type` | ENUM | passenger, driver, owner, admin |
-| `total_rides` | INT DEFAULT 0 | Tổng số chuyến đã đi |
-| `created_at` | TIMESTAMP | Ngày tạo |
-
-#### `drivers` - Hồ sơ tài xế
-
-| Column | Type | Mô tả |
-|--------|------|-------|
-| `id` | INT PRIMARY KEY | ID tài xế |
-| `user_id` | INT FK | Liên kết users |
-| `license_plate` | VARCHAR(20) | Biển số xe |
-| `vehicle_type` | ENUM | motorbike, 4seat, 7seat |
-| `vehicle_model` | VARCHAR(100) | Mẫu xe |
-| `is_online` | BOOLEAN | Trạng thái online |
-| `latitude` | DECIMAL(10,8) | Vĩ độ hiện tại |
-| `longitude` | DECIMAL(11,8) | Kinh độ hiện tại |
-
-#### `rides` - Bản ghi chuyến đi
-
-| Column | Type | Mô tả |
-|--------|------|-------|
-| `id` | INT PRIMARY KEY | ID chuyến đi |
-| `passenger_id` | INT FK | ID hành khách |
-| `driver_id` | INT FK | ID tài xế |
-| `pickup_lat` | DECIMAL(10,8) | Vĩ độ điểm đón |
-| `pickup_lng` | DECIMAL(11,8) | Kinh độ điểm đón |
-| `pickup_address` | VARCHAR(255) | Địa chỉ điểm đón |
-| `dropoff_lat` | DECIMAL(10,8) | Vĩ độ điểm trả |
-| `dropoff_lng` | DECIMAL(11,8) | Kinh độ điểm trả |
-| `dropoff_address` | VARCHAR(255) | Địa chỉ điểm trả |
-| `vehicle_type` | ENUM | Loại xe |
-| `status` | ENUM | pending, accepted, arrived, in_progress, completed, cancelled |
-| `fare` | DECIMAL(10,2) | Giá tiền |
-| `rating` | INT | Đánh giá (1-5) |
-| `comment` | TEXT | Bình luận |
-| `created_at` | TIMESTAMP | Thời gian tạo |
-
-#### `driver_locations` - Vị trí real-time của tài xế
-
-| Column | Type | Mô tả |
-|--------|------|-------|
-| `driver_id` | INT PK FK | ID tài xế |
-| `latitude` | DECIMAL(10,8) | Vĩ độ |
-| `longitude` | DECIMAL(11,8) | Kinh độ |
-| `updated_at` | TIMESTAMP | Thời gian cập nhật |
-
-#### `earnings` - Bản ghi thu nhập tài xế
-
-| Column | Type | Mô tả |
-|--------|------|-------|
-| `id` | INT PRIMARY KEY | ID |
-| `driver_id` | INT FK | ID tài xế |
-| `ride_id` | INT FK | ID chuyến đi |
-| `amount` | DECIMAL(10,2) | Số tiền |
-| `date` | DATE | Ngày |
-
-### 5.2 Bảng AI
-
-#### `ai_trip_schedules` - Kế hoạch chuyến đi
-
-| Column | Type | Mô tả |
-|--------|------|-------|
-| `id` | INT PRIMARY KEY | ID lịch trình |
-| `user_id` | INT FK | ID người dùng |
-| `schedule_name` | VARCHAR(255) | Tên lịch trình |
-| `optimization_type` | ENUM | time, cost, balanced |
-| `created_at` | TIMESTAMP | Ngày tạo |
-
-#### `ai_waypoints` - Các điểm dừng
-
-| Column | Type | Mô tả |
-|--------|------|-------|
-| `id` | INT PRIMARY KEY | ID |
-| `schedule_id` | INT FK | ID lịch trình |
-| `location_name` | VARCHAR(255) | Tên địa điểm |
-| `latitude` | DECIMAL(10,8) | Vĩ độ |
-| `longitude` | DECIMAL(11,8) | Kinh độ |
-| `order` | INT | Thứ tự |
-
-#### `ai_route_alternatives` - Tuyến đường thay thế
-
-| Column | Type | Mô tả |
-|--------|------|-------|
-| `id` | INT PRIMARY KEY | ID |
-| `schedule_id` | INT FK | ID lịch trình |
-| `route_name` | VARCHAR(100) | Tên tuyến (e.g., Fastest, Cheapest) |
-| `traffic_scenario` | ENUM | normal, rush_hour, off_peak |
-| `estimated_time` | INT | Thời gian ước tính (phút) |
-| `estimated_cost` | DECIMAL(10,2) | Chi phí ước tính |
-
-#### `ai_learning_profiles` - Hồ sơ học sở thích
-
-| Column | Type | Mô tả |
-|--------|------|-------|
-| `id` | INT PRIMARY KEY | ID |
-| `user_id` | INT FK UNIQUE | ID người dùng |
-| `preferred_time_start` | TIME | Giờ bắt đầu ưa thích |
-| `preferred_time_end` | TIME | Giờ kết thúc ưa thích |
-| `cost_vs_time_preference` | DECIMAL(3,2) | Slider chi phí/thời gian (0.00-1.00) |
-| `frequent_locations` | JSON | Array địa điểm thường đến |
-
-#### `driver_route_batches` - Nhóm chuyến đi gộp
-
-| Column | Type | Mô tả |
-|--------|------|-------|
-| `id` | INT PRIMARY KEY | ID |
-| `driver_id` | INT FK | ID tài xế |
-| `efficiency_score` | DECIMAL(3,2) | Điểm hiệu quả (0.00-1.00) |
-| `status` | ENUM | pending, accepted, rejected |
-| `created_at` | TIMESTAMP | Ngày tạo |
-
-#### `batch_passengers` - Hành khách trong batch
-
-| Column | Type | Mô tả |
-|--------|------|-------|
-| `id` | INT PRIMARY KEY | ID |
-| `batch_id` | INT FK | ID batch |
-| `passenger_id` | INT FK | ID hành khách |
-| `ride_id` | INT FK | ID chuyến đi |
-
-### 5.3 Trigger
-
-```sql
--- Tự động tăng total_rides cho user sau khi hoàn thành chuyến đi
-CREATE TRIGGER after_ride_completed
-AFTER UPDATE ON rides
-FOR EACH ROW
-BEGIN
-  IF NEW.status = 'completed' AND OLD.status != 'completed' THEN
-    UPDATE users SET total_rides = total_rides + 1 WHERE id = NEW.passenger_id;
-  END IF;
-END;
-```
-
----
-
-## 6. API Endpoints
-
-### 6.1 Authentication
-
-| Method | Endpoint | Mô tả | Body |
-|--------|----------|-------|------|
-| POST | `/api/auth/register` | Đăng ký | `{ email, password, full_name, phone, user_type }` |
-| POST | `/api/auth/login` | Đăng nhập | `{ email, password }` |
-
-**Response (Login):**
-```json
-{
-  "success": true,
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "user": {
-    "id": 1,
-    "email": "user@example.com",
-    "full_name": "Nguyen Van A",
-    "user_type": "passenger"
-  }
-}
-```
-
-### 6.2 Rides
-
-| Method | Endpoint | Mô tả | Body / Params |
-|--------|----------|-------|---------------|
-| POST | `/api/rides/request` | Yêu cầu đặt xe | `{ pickup_lat, pickup_lng, dropoff_lat, dropoff_lng, vehicle_type }` |
-| GET | `/api/rides` | Lấy lịch sử chuyến đi | Query: `?status=completed` |
-| PUT | `/api/rides/:id/status` | Cập nhật trạng thái | `{ status: "accepted" }` |
-| POST | `/api/rides/:id/rate` | Đánh giá chuyến đi | `{ rating, comment }` |
-
-**Trạng thái chuyến đi:**
-```
-pending → accepted → arrived → in_progress → completed
-                ↘ cancelled ↙
-```
-
-### 6.3 Driver
-
-| Method | Endpoint | Mô tả | Body / Params |
-|--------|----------|-------|---------------|
-| GET | `/api/driver/profile` | Lấy hồ sơ tài xế | - |
-| PUT | `/api/driver/status` | Bật/tắt online | `{ is_online: true }` |
-| GET | `/api/driver/ride/available` | Lấy yêu cầu chờ | - |
-| POST | `/api/driver/ride/:id/accept` | Nhận chuyến đi | - |
-| GET | `/api/driver/earnings` | Lấy thu nhập | Query: `?period=today\|week\|month\|total` |
-
-### 6.4 AI
-
-| Method | Endpoint | Mô tả | Body |
-|--------|----------|-------|------|
-| POST | `/api/ai/schedule/create` | Tạo lịch trình AI | `{ schedule_name, waypoints[], optimization_type }` |
-| POST | `/api/ai/schedule/:id/optimize` | Tối ưu lại tuyến | `{ optimization_type }` |
-| GET | `/api/ai/recommendations` | Lấy đề xuất cá nhân | - |
-| GET | `/api/ai/batch/available` | Lấy nhóm chuyến đi | - |
-| POST | `/api/ai/batch/:id/accept` | Nhận batch | - |
-
-**Cấu trúc tạo schedule:**
-```json
-{
-  "schedule_name": "Chuyến đi cuối tuần",
-  "waypoints": [
-    { "location_name": "Nhà", "latitude": 10.8231, "longitude": 106.6297 },
-    { "location_name": "Quán cafe", "latitude": 10.8300, "longitude": 106.6400 },
-    { "location_name": "Trung tâm thương mại", "latitude": 10.8350, "longitude": 106.6500 }
-  ],
-  "optimization_type": "balanced"
-}
-```
-
-### 6.5 Location
-
-| Method | Endpoint | Mô tả | Body |
-|--------|----------|-------|------|
-| GET | `/api/users/drivers/nearby` | Tìm tài xế gần | Query: `?lat=10.8231&lng=106.6297&radius=5` |
-| PUT | `/api/location/update` | Cập nhật vị trí | `{ latitude, longitude }` |
-
----
-
-## 7. Cấu hình
-
-### 7.1 Backend `.env`
-
-```env
-DB_HOST=localhost
-DB_USER=root
-DB_PASSWORD=1234
-DB_NAME=doan3_db
-DB_PORT=3306
-JWT_SECRET=DoAn3_KhoaTuanAnh_2026_JWT_Secret_Key_xK9mP2vL5nQ8jR4wT7yB3cF6hJ1mN4pL9sZ2aB5dE8fG1
-PORT=3000
-```
-
-### 7.2 Android `AppConfig.kt`
-
-```kotlin
-// Emulator (mặc định)
-const val BASE_URL = "http://10.0.2.2:3000/api/"
-
-// Thiết bị thật (cùng mạng LAN)
-const val BASE_URL = "http://192.168.x.x:3000/api/"
-```
-
-> **Lưu ý:** Thay `192.168.x.x` bằng địa chỉ IP thực của máy chạy backend trong cùng mạng LAN. Kiểm tra IP bằng lệnh `ipconfig` (Windows) hoặc `ifconfig` (Linux/Mac).
-
-### 7.3 Database Setup
-
-```bash
-# Kết nối MySQL và chạy schema
-mysql -u root -p < backend/src/database/schema.sql
-
-# Chạy dữ liệu test
-mysql -u root -p doan3_db < backend/src/database/seed.sql
-```
-
----
-
-## 8. Tài khoản test
-
-| Loại | Email | Mật khẩu |
-|------|-------|-----------|
-| Hành khách | passenger@test.com | password123 |
-| Tài xế 1 | driver1@test.com | password123 |
-| Tài xế 2 | driver2@test.com | password123 |
-| Tài xế 3 | driver3@test.com | password123 |
-
----
-
-## 9. Hướng dẫn cài đặt
-
-### 9.1 Backend
-
-```bash
-# 1. Di chuyển vào thư mục backend
-cd backend
-
-# 2. Cài đặt dependencies
-npm install
-
-# 3. Tạo database và chạy schema
-mysql -u root -p < src/database/schema.sql
-mysql -u root -p < src/database/seed.sql
-
-# 4. Chạy server
-npm start
-# Hoặc dev mode:
-npm run dev
-```
-
-Server sẽ chạy tại `http://localhost:3000`
-
-### 9.2 Android App
-
-```bash
-# 1. Di chuyển vào thư mục app
-cd app
-
-# 2. Chạy build debug APK
-./gradlew assembleDebug
-
-# APK sẽ nằm tại:
-# app/build/outputs/apk/debug/app-debug.apk
-```
-
-### 9.3 Cài đặt APK trên thiết bị thật
-
-1. Đảm bảo backend đang chạy và thiết bị cùng mạng LAN
-2. Cập nhật `AppConfig.kt` với IP thực của máy chạy backend
-3. Build lại APK và cài đặt trên thiết bị
-4. Bật debug USB hoặc cài trực tiếp file APK
-
----
-
-
----
-
-## 9.5 Các lỗi đã được sửa (2026-05-10)
-
-### Android
-
-| File | Lỗi | Fix |
-|------|------|-----|
-| `di/AppModule.kt` | `baseUrl` hardcoded | Thay bang `AppConfig.BASE_URL` |
-| `ui/theme/Theme.kt` | Deprecated `window.statusBarColor` | Xoa dong set + import `toArgb` |
-| `ui/components/CommonComponents.kt` | `Icons.Default.ArrowBack` deprecated | `Icons.AutoMirrored.Filled.ArrowBack` |
-| `ui/screens/ProfileScreen.kt` | `Icons.Default.Help/Logout` deprecated | `Icons.AutoMirrored.Filled.*` |
-| `ui/screens/driver/DriverScreens.kt` | `Icons.Default.TrendingUp` deprecated | `Icons.AutoMirrored.Filled.TrendingUp` |
-| `ui/screens/passenger/PassengerHomeScreen.kt` | `Icons.Default.Chat/ArrowForward` deprecated | `Icons.AutoMirrored.Filled.*` |
-
-### Backend
-
-| File | Lỗi | Fix |
-|------|------|-----|
-| `socket/index.js` | `getIO()` tra ve `undefined` (runtime crash) | Them `ioInstance` global variable |
-| `routes/locations.js` | SyntaxError - dau ngoac thua `)` | Xoa dau `)` thua |
-
-### Ket qua build
-
-| Kiem tra | Ket qua |
-|----------|---------|
-| Android Clean Build | BUILD SUCCESSFUL (43 tasks, ~1 phut) |
-| Android APK | `app-debug.apk` - 19.55 MB |
-| Android Warnings | 0 |
-| Backend JS Syntax (20 files) | Tat ca OK |
-| APK Path | `app/build/outputs/apk/debug/app-debug.apk` |
-
+# DoAn3 - Smart Ride Booking System with AI Travel Assistant
+
+> **Phien ban:** 1.3.0 | **Ngay cap nhat:** 2026-05-13
+> **Trang thai:** Backend 100% | Android 100% | Admin Panel 100% | BUILD SUCCESSFUL
+> **Tac gia:** Le Dang Khoa, Tran Nguyen Tuan Anh
+> **Truong:** Dai hoc Bach Khoa TP.HCM (HUTECH)
+> **App ID:** `com.laptrinhdidong.DoAn3`
 
 ---
 
-## 9.5 Các lỗi đã được sửa (2026-05-10)
+## Muc luc
+
+1. [Tong quan du an](#1-tong-quan-du-an)
+2. [Cong nghe su dung](#2-cong-nghe-su-dung)
+3. [Cau truc du an](#3-cau-truc-du-an)
+4. [Tinh nang](#4-tinh-nang)
+5. [Database Schema](#5-database-schema)
+6. [API Endpoints](#6-api-endpoints)
+7. [WebSocket Events](#7-websocket-events)
+8. [Cau hinh](#8-cau-hinh)
+9. [Tai khoan test](#9-tai-khoan-test)
+10. [Huong dan cai dat](#10-huong-dan-cai-dat)
+11. [Cac loi da duoc sua](#11-cac-loi-da-duoc-sua)
+12. [Lich su phat trien](#12-lich-su-phat-trien)
+
+---
+
+## 1. Tong quan du an
+
+**DoAn3** la mot ung dung di dong **dat xe truc tuyen** (ride-hailing, giong Uber) ket hop tinh nang **tro ly du lich AI**. Nguoi dung co the dat xe may, xe 4 cho hoac xe 7 cho, dong thoi su dung cac tinh nang AI de lap ke hoach hanh trinh, toi uu tuyen duong va nhan deu xuat ca nhan hoa.
+
+### 1.1 Cac loai nguoi dung
+
+| Loai | Mo ta | Quyen |
+|------|-------|-------|
+| **Passenger** | Khach hang dat xe | Dat xe, theo doi, danh gia |
+| **Driver** | Tai xe nhan chuyen | Nhan chuyen, cap nhat trang thai, xem thu nhap |
+| **Owner** | Chu xe | Quan ly phuong tien |
+| **Consultant** | Tu van khach hang | Ho tro khach hang |
+| **Admin** | Quan tri he thong | Quan ly toan bo he thong |
+| **HR Manager** | Quan ly nhan su | Quan ly tai xe |
+| **Revenue Manager** | Quan ly doanh thu | Xem bao cao doanh thu |
+
+### 1.2 Cac thanh phan chinh
+
+| Thanh phan | Mo ta |
+|------------|-------|
+| **Android App** | Ung dung Kotlin + Jetpack Compose cho nguoi dung cuoi |
+| **Backend API** | Node.js + Express xu ly logic, MySQL |
+| **Admin Panel** | React + Vite + Tailwind CSS |
+| **Socket.IO** | Giao tiep real-time giua app va server |
+| **FCM** | Push notifications tu server den app |
+
+---
+
+## 2. Cong nghe su dung
+
+### 2.1 Frontend (Android)
+
+| Thanh phan | Cong nghe | Phien ban |
+|------------|-----------|-----------|
+| Ngon ngu | Kotlin | 1.9+ |
+| UI Framework | Jetpack Compose + Material Design 3 | BOM 2024.02.00 |
+| Architecture | MVVM + Clean Architecture | - |
+| Dependency Injection | Hilt | 2.51 |
+| Networking | Retrofit + OkHttp + Gson | 2.9.0 / 4.x |
+| Async | Kotlin Coroutines + Flow | 1.8.0 |
+| Navigation | Jetpack Navigation Compose | - |
+| Real-time | Socket.IO Client | 2.1.0 |
+| Maps | Google Maps SDK + maps-compose | 18.2.0 / 4.3.0 |
+| Push Notifications | Firebase Messaging | BOM managed |
+| Local Storage | SharedPreferences (SessionManager) | - |
+| Min SDK | 24 (Android 7.0) | - |
+| Target SDK | 36 | - |
+
+### 2.2 Backend
+
+| Thanh phan | Cong nghe | Phien ban |
+|------------|-----------|-----------|
+| Runtime | Node.js | 18.x+ |
+| Framework | Express.js | 4.21.x |
+| Database | MySQL | 8.0 |
+| Authentication | JWT (JSON Web Tokens) | 9.0.2 |
+| Password Hashing | bcryptjs | 2.4.3 |
+| Realtime | Socket.IO | 4.8.3 |
+| Push Notifications | Firebase Admin SDK | - |
+| Dev Server | nodemon | - |
+| Email | Nodemailer | SMTP |
+
+### 2.3 Admin Panel
+
+| Thanh phan | Cong nghe |
+|------------|-----------|
+| Framework | React 18 + Vite |
+| Styling | Tailwind CSS |
+| Icons | Lucide React |
+| Charts | Recharts |
+| HTTP Client | Fetch API |
+| State | React Context |
+
+---
+
+## 3. Cau truc du an
+
+### 3.1 Backend (`/backend`)
+
+```
+backend/
+├── src/
+│   ├── index.js                  # Entry point (port 3000)
+│   ├── database/
+│   │   ├── db.js                # MySQL connection pool
+│   │   ├── schema.sql           # 16 bang (core + AI + payment + admin)
+│   │   └── seed.sql             # Du lieu test + admin accounts
+│   ├── routes/
+│   │   ├── auth.js              # Auth + OTP + Forgot Password
+│   │   ├── users.js             # User management
+│   │   ├── rides.js             # Ride operations + cancel + rate + search
+│   │   ├── drivers.js           # Driver features + earnings breakdown
+│   │   ├── locations.js         # Location + nearby drivers
+│   │   ├── ai.js               # AI schedule + batch + recommendations
+│   │   ├── chat.js             # P2P chat
+│   │   ├── payments.js          # Payment CRUD + VNPay + MoMo HMAC
+│   │   └── admin.js            # Admin dashboard + user/ride/driver management
+│   ├── repositories/
+│   │   ├── userRepository.js
+│   │   ├── driverRepository.js
+│   │   ├── rideRepository.js
+│   │   ├── aiRepository.js
+│   │   └── locationRepository.js
+│   ├── services/
+│   │   └── notification.js     # FCM push notifications
+│   ├── socket/
+│   │   └── index.js            # Socket.IO real-time (location, status, chat)
+│   ├── middleware/
+│   │   └── auth.js             # JWT verification + adminAuth
+│   └── utils/
+│       ├── geo.js              # Haversine distance calculation
+│       └── price.js            # Dynamic pricing (3 vehicle types)
+├── package.json
+└── .env
+```
+
+### 3.2 Android App (`/app`)
+
+```
+app/src/main/java/com/laptrinhdidong/DoAn3/
+├── MainActivity.kt
+├── DoAn3Application.kt          # Hilt Application
+├── AppConfig.kt                 # BASE_URL configuration
+├── data/
+│   ├── local/
+│   │   └── SessionManager.kt    # SharedPreferences + JWT token
+│   ├── remote/
+│   │   ├── RetrofitClient.kt   # HTTP client + OkHttp interceptor
+│   │   ├── SocketManager.kt    # Socket.IO client singleton
+│   │   ├── ApiService.kt      # All API endpoints interface
+│   │   └── dto/
+│   │       ├── AuthDto.kt
+│   │       ├── RideDto.kt
+│   │       ├── DriverDto.kt
+│   │       ├── AIDto.kt
+│   │       └── PaymentDto.kt
+│   └── repository/
+│       ├── AuthRepository.kt
+│       ├── RideRepository.kt
+│       ├── DriverRepository.kt
+│       ├── AIRepository.kt
+│       └── PaymentRepository.kt
+├── di/
+│   └── AppModule.kt            # Hilt DI modules
+├── ui/
+│   ├── theme/
+│   │   ├── Color.kt          # Dark theme colors
+│   │   ├── Theme.kt          # Material3 dark theme
+│   │   └── Type.kt           # Typography
+│   ├── components/
+│   │   ├── CommonComponents.kt # GradientButton, RatingBar, DriverCard, RideCard, etc.
+│   │   └── MapComponents.kt   # TaxiMapView (Google Maps composable)
+│   ├── navigation/
+│   │   └── AppNavigation.kt   # Navigation graph (SplashScreen, Auth, Home, AI, etc.)
+│   └── screens/
+│       ├── auth/
+│       │   ├── AuthScreen.kt  # Login/Register with animation
+│       │   ├── ForgotPasswordScreen.kt
+│       │   ├── OtpVerificationScreen.kt
+│       │   └── ResetPasswordScreen.kt
+│       ├── splash/
+│       │   └── SplashScreen.kt # Auto-login check
+│       ├── passenger/
+│       │   ├── PassengerHomeScreen.kt # Booking + Map + Driver tracking
+│       │   └── HistoryScreen.kt    # Ride history + search + filter
+│       ├── driver/
+│       │   ├── DriverHomeScreen.kt  # Online/offline + accept rides
+│       │   ├── EarningsScreen.kt    # Earnings + chart + stats
+│       │   └── DriverScreens.kt     # Combined driver screens
+│       ├── ai/
+│       │   └── AIScreens.kt         # Schedule, Recommendations, Chat
+│       └── shared/
+│           ├── ProfileScreen.kt      # User + Driver profile
+│           └── RideDetailScreen.kt   # Ride detail + payment + rating
+└── service/
+    └── DoAn3FCMService.kt     # Firebase Cloud Messaging
+```
+
+### 3.3 Admin Panel (`/admin-panel`)
+
+```
+admin-panel/
+├── src/
+│   ├── pages/
+│   │   ├── Dashboard.jsx      # Stat cards + recent rides
+│   │   ├── Users.jsx          # User search + ban/unban
+│   │   ├── Drivers.jsx        # Driver list + earnings
+│   │   ├── Rides.jsx          # Ride management + status edit
+│   │   └── Statistics.jsx      # Charts + revenue + date range
+│   ├── components/
+│   │   ├── Sidebar.jsx        # Navigation sidebar
+│   │   └── StatCard.jsx       # Dashboard stat card
+│   ├── context/
+│   │   └── AuthContext.jsx   # JWT auth context
+│   ├── api/
+│   │   └── adminApi.js        # API calls
+│   ├── App.jsx
+│   └── main.jsx
+├── package.json
+├── vite.config.js
+└── tailwind.config.js
+```
+
+---
+
+## 4. Tinh nang
+
+### 4.1 Xac thuc nguoi dung
+
+| Tinh nang | Mo ta | Trang thai |
+|-----------|-------|------------|
+| Dang nhap / Dang ky | Phan loai passenger / driver | ✅ Hoan thanh |
+| JWT token | 30 ngay expiry | ✅ Hoan thanh |
+| Form validation | Real-time + chi bao do manh mat khau | ✅ Hoan thanh |
+| Auto-login | Splash screen kiem tra session | ✅ Hoan thanh |
+| Quen mat khau | OTP 6 chu so qua email (10 phut) | ✅ Hoan thanh |
+| FCM token registration | Luu FCM token cho push notification | ✅ Hoan thanh |
+
+### 4.2 Tinh nang khach hang
+
+| Tinh nang | Mo ta | Trang thai |
+|-----------|-------|------------|
+| **Dat xe** | Chon diem don / diem den / loai xe | ✅ Hoan thanh |
+| **3 loai xe** | Xe may, o to 4 cho, o to 7 cho | ✅ Hoan thanh |
+| **Dynamic pricing** | Gia theo loai xe + quang duong + thoi gian | ✅ Hoan thanh |
+| **Tim tai xe gan** | Haversine filter, polling 5s | ✅ Hoan thanh |
+| **Theo doi realtime** | WebSocket location update | ✅ Hoan thanh |
+| **Trang thai ride** | pending -> accepted -> arrived -> in_progress -> completed | ✅ Hoan thanh |
+| **Google Maps** | Map SDK + markers + polyline + navigation | ✅ Hoan thanh |
+| **Chat voi tai xe** | P2P chat real-time | ✅ Hoan thanh |
+| **Thanh toan** | Tien mat / MoMo / VNPay (HMAC signed) | ✅ Hoan thanh |
+| **Danh gia** | 1-5 sao + tags + binh luan | ✅ Hoan thanh |
+| **Lich su chuyen di** | Tim kiem + loc theo trang thai / ngay | ✅ Hoan thanh |
+| **Huy chuyen** | Chinh sach huy (5 phut dau mien phi) | ✅ Hoan thanh |
+
+### 4.3 Tinh nang tai xe
+
+| Tinh nang | Mo ta | Trang thai |
+|-----------|-------|------------|
+| **Online / Offline** | Toggle trang thai | ✅ Hoan thanh |
+| **Nhan chuyen** | Xem yeu cau, accept / reject | ✅ Hoan thanh |
+| **Cap nhat trang thai** | arrived / in_progress / completed | ✅ Hoan thanh |
+| **Thu nhap** | Hom nay / Tuan / Thang / Tong | ✅ Hoan thanh |
+| **Thu nhap chi tiet** | Bieu do 30 ngay + so sanh tuan truoc | ✅ Hoan thanh |
+| **Driver stats** | Tong chuyen, rating TB, ti le nhan | ✅ Hoan thanh |
+| **Lich su chuyen di** | Xem danh sach chuyen da hoan thanh | ✅ Hoan thanh |
+| **Ho so xe** | Cap nhat thong tin xe | ✅ Hoan thanh |
+
+### 4.4 Tinh nang AI
+
+| Tinh nang | Mo ta | Trang thai |
+|-----------|-------|------------|
+| **AI Trip Scheduler** | Tao lich trinh nhieu diem dung | ✅ Hoan thanh |
+| **AI Optimization** | Nhanh nhat / Re nhat / Can bang | ✅ Hoan thanh |
+| **AI Route Alternatives** | Nhieu phuong an tuyen duong | ✅ Hoan thanh |
+| **AI Learning Profile** | Thoi gian / chi phi / dia diem uu thich | ✅ Hoan thanh |
+| **AI Recommendations** | Goi y ca nhan hoa | ✅ Hoan thanh |
+| **AI Batch Offers** | Gom nhieu khach cho 1 tai xe | ✅ Hoan thanh |
+| **Tro ly AI Chat** | Chat voi tro ly AI | ✅ Hoan thanh |
+
+### 4.5 Tinh nang Admin
+
+| Tinh nang | Mo ta | Trang thai |
+|-----------|-------|------------|
+| **Dashboard** | Tong quan + stat cards + recent rides | ✅ Hoan thanh |
+| **User Management** | Tim kiem + loc theo role + ban/unban | ✅ Hoan thanh |
+| **Driver Management** | Danh sach + earnings + online status | ✅ Hoan thanh |
+| **Ride Management** | Danh sach + loc + sua trang thai | ✅ Hoan thanh |
+| **Statistics** | Bieu do cot / duong + doanh thu + date range | ✅ Hoan thanh |
+
+---
+
+## 5. Database Schema
+
+### 5.1 Bang nguoi dung (users)
+
+| Cot | Kieu | Mo ta |
+|-----|------|-------|
+| id | INT PK | ID nguoi dung |
+| email | VARCHAR(255) UNIQUE | Email dang nhap |
+| password_hash | VARCHAR(255) | Mat khau da bam (bcrypt) |
+| name | VARCHAR(255) | Ho ten day du |
+| phone | VARCHAR(20) | So dien thoai |
+| user_type | ENUM | passenger, driver, owner, consultant, hr_manager, revenue_manager, admin |
+| rating | DECIMAL(3,2) DEFAULT 5.00 | Diem danh gia trung binh |
+| total_rides | INT DEFAULT 0 | Tong so chuyen da di |
+| is_banned | BOOLEAN DEFAULT FALSE | Bi khoa tai khoan |
+| created_at | TIMESTAMP | Ngay tao |
+
+### 5.2 Bang tai xe (drivers)
+
+| Cot | Kieu | Mo ta |
+|-----|------|-------|
+| id | INT PK | ID tai xe |
+| user_id | INT FK UNIQUE | Lien ket users (1:1) |
+| car_model | VARCHAR(100) | Hieu xe |
+| car_color | VARCHAR(50) | Mau xe |
+| license_plate | VARCHAR(20) | Bien so |
+| is_available | BOOLEAN DEFAULT FALSE | Trang thai online |
+| latitude | DECIMAL(10,8) | Vi do hien tai |
+| longitude | DECIMAL(11,8) | Kinh do hien tai |
+| vehicle_type | ENUM | motorbike, car_4_seats, car_7_seats |
+| created_at | TIMESTAMP | Ngay tao |
+
+### 5.3 Bang chuyen di (rides)
+
+| Cot | Kieu | Mo ta |
+|-----|------|-------|
+| id | INT PK | ID chuyen di |
+| passenger_id | INT FK | ID khach hang |
+| driver_id | INT FK NULL | ID tai xe (chua co -> null) |
+| pickup_lat | DECIMAL(10,8) | Vi do diem don |
+| pickup_lng | DECIMAL(11,8) | Kinh do diem don |
+| dest_lat | DECIMAL(10,8) | Vi do diem tra |
+| dest_lng | DECIMAL(11,8) | Kinh do diem tra |
+| pickup_address | VARCHAR(500) | Dia chi diem don |
+| dest_address | VARCHAR(500) | Dia chi diem tra |
+| vehicle_type | ENUM | Loai xe da chon |
+| distance_km | DECIMAL(8,2) | Quang duong (km) |
+| duration_min | INT | Thoi gian uoc tinh (phut) |
+| price | DECIMAL(10,0) | Gia tien (VND) |
+| status | ENUM | pending, accepted, arrived, in_progress, completed, cancelled |
+| driver_rating | TINYINT NULL | Danh gia cua khach (1-5) |
+| passenger_rating | TINYINT NULL | Danh gia cua tai xe |
+| rating_comment | VARCHAR(500) | Binh luan danh gia |
+| started_at | TIMESTAMP NULL | Thoi gian bat dau |
+| completed_at | TIMESTAMP NULL | Thoi gian hoan thanh |
+| cancellation_reason | VARCHAR(100) NULL | Ly do huy |
+| cancellation_fee | DECIMAL(10,0) NULL | Phi huy |
+| payment_method | ENUM NULL | cash, wallet, vnpay, momo |
+| payment_status | ENUM DEFAULT 'pending' | pending, paid, failed |
+| created_at | TIMESTAMP | Ngay tao |
+
+### 5.4 Bang vi tri tai xe (driver_locations)
+
+| Cot | Kieu | Mo ta |
+|-----|------|-------|
+| id | INT PK | ID |
+| driver_id | INT FK | ID tai xe |
+| latitude | DECIMAL(10,8) | Vi do |
+| longitude | DECIMAL(11,8) | Kinh do |
+| accuracy | DECIMAL(8,2) NULL | Do chinh xac GPS |
+| speed | DECIMAL(6,2) NULL | Van toc (m/s) |
+| heading | INT NULL | Huong (0-360) |
+| updated_at | TIMESTAMP | Lan cap nhat cuoi |
+
+### 5.5 Bang thu nhap (transactions / earnings)
+
+| Cot | Kieu | Mo ta |
+|-----|------|-------|
+| id | INT PK | ID |
+| driver_id | INT FK | ID tai xe |
+| ride_id | INT FK NULL | ID chuyen di |
+| amount | DECIMAL(12,0) | So tien (VND) |
+| type | ENUM | ride, bonus, penalty, withdrawal, cancellation |
+| note | VARCHAR(255) NULL | Ghi chu |
+| created_at | TIMESTAMP | Ngay tao |
+
+### 5.6 Bang lich trinh AI (ai_trip_schedules)
+
+| Cot | Kieu | Mo ta |
+|-----|------|-------|
+| id | INT PK | ID lich trinh |
+| user_id | INT FK | ID nguoi dung |
+| schedule_name | VARCHAR(255) | Ten lich trinh |
+| scheduled_date | DATE | Ngay du kien |
+| total_estimated_time | INT NULL | Tong thoi gian uoc tinh (phut) |
+| total_estimated_price | DECIMAL(12,0) NULL | Tong gia uoc tinh (VND) |
+| total_distance | DECIMAL(8,2) NULL | Tong quang duong (km) |
+| optimization_type | ENUM | time, cost, balanced |
+| ai_confidence_score | DECIMAL(3,2) NULL | Diem tu tin AI (0-1) |
+| traffic_condition | VARCHAR(50) NULL | Tinh trang giao thong |
+| status | ENUM | planned, in_progress, completed, cancelled |
+| created_at | TIMESTAMP | Ngay tao |
+
+### 5.7 Bang diem dung (ai_waypoints)
+
+| Cot | Kieu | Mo ta |
+|-----|------|-------|
+| id | INT PK | ID |
+| schedule_id | INT FK | ID lich trinh |
+| stop_order | INT | Thu tu diem dung |
+| stop_type | ENUM | pickup, dropoff, stopover |
+| latitude | DECIMAL(10,8) | Vi do |
+| longitude | DECIMAL(11,8) | Kinh do |
+| address | VARCHAR(500) | Dia chi |
+| stop_name | VARCHAR(255) NULL | Ten diem dung |
+| estimated_arrival | TIME NULL | Thoi gian den du kien |
+| duration_min | INT NULL | Thoi gian dung (phut) |
+| distance_from_prev | DECIMAL(8,2) NULL | Quang duong tu diem truoc (km) |
+| is_optional | BOOLEAN DEFAULT FALSE | Co the bo qua |
+| priority | INT DEFAULT 0 | Do uu tien |
+| estimated_price_segment | DECIMAL(12,0) NULL | Gia cho doan nay |
+
+### 5.8 Bang tuyen thay the (ai_route_alternatives)
+
+| Cot | Kieu | Mo ta |
+|-----|------|-------|
+| id | INT PK | ID |
+| schedule_id | INT FK | ID lich trinh |
+| route_name | VARCHAR(100) | Ten tuyen (Fastest, Cheapest, Balanced) |
+| total_distance | DECIMAL(8,2) | Tong quang duong (km) |
+| total_duration | INT | Tong thoi gian (phut) |
+| total_price | DECIMAL(12,0) | Tong gia (VND) |
+| route_description | TEXT NULL | Mo ta tuyen duong |
+| is_recommended | BOOLEAN DEFAULT FALSE | Duoc AI goi y |
+| traffic_scenario | VARCHAR(50) NULL | Kich ban giao thong |
+
+### 5.9 Bang ho so hoc tap AI (ai_learning_profiles)
+
+| Cot | Kieu | Mo ta |
+|-----|------|-------|
+| id | INT PK | ID |
+| user_id | INT FK UNIQUE | ID nguoi dung |
+| preferred_time_start | TIME NULL | Gio bat dau uu thich |
+| preferred_time_end | TIME NULL | Gio ket thuc uu thich |
+| average_trip_duration | DECIMAL(6,2) NULL | Thoi gian TB mot chuyen (phut) |
+| average_trip_cost | DECIMAL(12,0) NULL | Chi phi TB mot chuyen (VND) |
+| total_distance_travelled | DECIMAL(10,2) NULL | Tong quang duong da di (km) |
+| frequent_locations | TEXT NULL | Array JSON dia diem thuong den |
+| avoid_locations | TEXT NULL | Array JSON dia diem tranh |
+| preference_cost_vs_time | DECIMAL(3,2) NULL | 0=chi phi, 1=thoi gian |
+
+### 5.10 Bang chuyen gom (driver_route_batches)
+
+| Cot | Kieu | Mo ta |
+|-----|------|-------|
+| id | INT PK | ID |
+| driver_id | INT FK | ID tai xe |
+| batch_name | VARCHAR(255) NULL | Ten batch |
+| status | ENUM | proposed, accepted, rejected, completed, cancelled |
+| total_revenue | DECIMAL(12,0) NULL | Tong doanh thu (VND) |
+| total_distance | DECIMAL(8,2) NULL | Tong quang duong (km) |
+| passenger_count | INT DEFAULT 0 | So khach |
+| efficiency_score | DECIMAL(4,2) NULL | Diem hieu qua (0-100%) |
+| ai_confidence | DECIMAL(3,2) NULL | Do tu tin AI (0-1) |
+| accepted_at | TIMESTAMP NULL | Thoi gian chap nhan |
+| completed_at | TIMESTAMP NULL | Thoi gian hoan thanh |
+| created_at | TIMESTAMP | Ngay tao |
+
+### 5.11 Bang khach hang trong batch (batch_passengers)
+
+| Cot | Kieu | Mo ta |
+|-----|------|-------|
+| id | INT PK | ID |
+| batch_id | INT FK | ID batch |
+| passenger_id | INT FK | ID khach hang |
+| original_ride_id | INT FK | ID chuyen di goc |
+| pickup_order | INT NULL | Thu tu don |
+| dropoff_order | INT NULL | Thu tu tra |
+| pickup_lat | DECIMAL(10,8) | Vi do don |
+| pickup_lng | DECIMAL(11,8) | Kinh do don |
+| dropoff_lat | DECIMAL(10,8) | Vi do tra |
+| dropoff_lng | DECIMAL(11,8) | Kinh do tra |
+| estimated_pickup_time | TIME NULL | Thoi gian don du kien |
+| detour_km | DECIMAL(6,2) NULL | Km vuot dinh muc |
+| price_adjustment | DECIMAL(12,0) NULL | Dieu chinh gia |
+| status | ENUM | pending, picked_up, dropped_off, cancelled |
+
+### 5.12 Bang tin nhan chat (chat_messages)
+
+| Cot | Kieu | Mo ta |
+|-----|------|-------|
+| id | INT PK | ID |
+| ride_id | INT FK | ID chuyen di |
+| sender_id | INT FK | ID nguoi gui |
+| sender_type | ENUM | passenger, driver |
+| message | TEXT | Noi dung tin nhan |
+| message_type | ENUM DEFAULT 'text' | text, location, image |
+| is_read | BOOLEAN DEFAULT FALSE | Da doc |
+| created_at | TIMESTAMP | Thoi gian gui |
+
+### 5.13 Bang tags danh gia (ride_rating_tags)
+
+| Cot | Kieu | Mo ta |
+|-----|------|-------|
+| id | INT PK | ID |
+| ride_id | INT FK | ID chuyen di |
+| tag_name | VARCHAR(50) | Ten tag |
+| created_at | TIMESTAMP | Thoi gian tao |
+
+### 5.14 Bang log huy chuyen (cancellation_log)
+
+| Cot | Kieu | Mo ta |
+|-----|------|-------|
+| id | INT PK | ID |
+| ride_id | INT FK | ID chuyen di |
+| cancelled_by | ENUM | passenger, driver |
+| reason | VARCHAR(100) | Ly do huy |
+| passenger_fee | DECIMAL(10,0) | Phi huy khach tra |
+| driver_fee | DECIMAL(10,0) | Phi huy tai xe tra |
+| created_at | TIMESTAMP | Thoi gian huy |
+
+### 5.15 Bang hinh anh chuyen di (ride_images)
+
+| Cot | Kieu | Mo ta |
+|-----|------|-------|
+| id | INT PK | ID |
+| ride_id | INT FK | ID chuyen di |
+| image_url | VARCHAR(500) | URL hinh anh |
+| image_type | VARCHAR(20) | Loai (pickup_photo, dropoff_photo) |
+| created_at | TIMESTAMP | Thoi gian tai |
+
+### 5.16 Bang FCM tokens (user_fcm_tokens)
+
+| Cot | Kieu | Mo ta |
+|-----|------|-------|
+| id | INT PK | ID |
+| user_id | INT FK | ID nguoi dung |
+| fcm_token | TEXT | FCM token |
+| device_id | VARCHAR(255) | ID thiet bi |
+| created_at | TIMESTAMP | Ngay tao |
+
+### 5.17 Bang dat lai mat khau (password_resets)
+
+| Cot | Kieu | Mo ta |
+|-----|------|-------|
+| id | INT PK | ID |
+| email | VARCHAR(255) | Email nguoi dung |
+| token | VARCHAR(255) | OTP token |
+| expires_at | TIMESTAMP | Thoi han (10 phut) |
+| used | BOOLEAN DEFAULT FALSE | Da su dung |
+| created_at | TIMESTAMP | Ngay tao |
+
+---
+
+## 6. API Endpoints
+
+### 6.1 Authentication
+
+| Method | Endpoint | Mo ta |
+|--------|----------|-------|
+| POST | `/api/auth/register` | Dang ky tai khoan |
+| POST | `/api/auth/login` | Dang nhap |
+| POST | `/api/auth/fcm/register` | Dang ky FCM token |
+| POST | `/api/auth/forgot-password` | Gui ma OTP qua email |
+| POST | `/api/auth/verify-otp` | Xac minh ma OTP |
+| POST | `/api/auth/reset-password` | Dat lai mat khau |
+| POST | `/api/auth/resend-otp` | Gui lai ma OTP |
+
+### 6.2 Users
+
+| Method | Endpoint | Mo ta |
+|--------|----------|-------|
+| GET | `/api/users/me` | Thong tin nguoi dung hien tai |
+| GET | `/api/users/:id` | Thong tin nguoi dung theo ID |
+| GET | `/api/users/drivers/nearby` | Tim tai xe gan (query: lat, lng, radius) |
+
+### 6.3 Rides
+
+| Method | Endpoint | Mo ta |
+|--------|----------|-------|
+| POST | `/api/rides/request` | Dat xe |
+| GET | `/api/rides` | Lich su chuyen di (query: status, search) |
+| GET | `/api/rides/search` | Tim kiem chuyen di |
+| GET | `/api/rides/active` | Chuyen di dang hoat dong |
+| GET | `/api/rides/:id` | Chi tiet chuyen di |
+| PUT | `/api/rides/:id/status` | Cap nhat trang thai |
+| PUT | `/api/rides/:id/cancel` | Huy chuyen di |
+| POST | `/api/rides/:id/rate` | Danh gia (rating, tags, comment) |
+
+### 6.4 Driver
+
+| Method | Endpoint | Mo ta |
+|--------|----------|-------|
+| GET | `/api/driver/profile` | Ho so tai xe |
+| PUT | `/api/driver/profile` | Cap nhat ho so |
+| PUT | `/api/driver/status` | Online / Offline |
+| GET | `/api/driver/ride/available` | Chuyen di kha dung |
+| POST | `/api/driver/ride/:id/accept` | Nhan chuyen |
+| POST | `/api/driver/ride/:id/reject` | Tu choi chuyen |
+| GET | `/api/driver/earnings` | Thu nhap chi tiet (summary + daily + week comparison) |
+| GET | `/api/driver/history` | Lich su chuyen di |
+
+### 6.5 Location
+
+| Method | Endpoint | Mo ta |
+|--------|----------|-------|
+| PUT | `/api/location/update` | Cap nhat vi tri tai xe |
+| GET | `/api/location/driver/:id` | Lay vi tri tai xe |
+| GET | `/api/location/nearby-drivers` | Danh sach tai xe gan (query: lat, lng, radius) |
+
+### 6.6 AI
+
+| Method | Endpoint | Mo ta |
+|--------|----------|-------|
+| POST | `/api/ai/schedule/create` | Tao lich trinh AI |
+| GET | `/api/ai/schedule/:id` | Chi tiet lich trinh |
+| POST | `/api/ai/schedule/:id/optimize` | Toi uu lich trinh |
+| GET | `/api/ai/schedule-preview` | Xem truoc lich trinh |
+| GET | `/api/ai/history` | Lich su lich trinh AI |
+| GET | `/api/ai/profile` | Ho so hoc tap AI |
+| PUT | `/api/ai/profile` | Cap nhat ho so AI |
+| GET | `/api/ai/recommendations` | Goi y ca nhan hoa |
+| GET | `/api/ai/batch/available` | Batch offers kha dung |
+| POST | `/api/ai/batch/:id/accept` | Chap nhan batch |
+| POST | `/api/ai/batch/:id/reject` | Tu choi batch |
+
+### 6.7 Chat
+
+| Method | Endpoint | Mo ta |
+|--------|----------|-------|
+| GET | `/api/chat/:rideId/messages` | Lay tin nhan |
+| POST | `/api/chat/:rideId/send` | Gui tin nhan |
+
+### 6.8 Payment
+
+| Method | Endpoint | Mo ta |
+|--------|----------|-------|
+| GET | `/api/payments/methods` | Danh sach phuong thuc thanh toan |
+| POST | `/api/payments/create` | Tao payment cho ride |
+| GET | `/api/payments/:id` | Chi tiet payment |
+| POST | `/api/payments/:id/confirm` | Xac nhan thanh toan |
+| GET | `/api/payments/history` | Lich su thanh toan |
+| GET | `/api/payments/admin/all` | Tat ca payments (admin) |
+
+### 6.9 Admin
+
+| Method | Endpoint | Mo ta |
+|--------|----------|-------|
+| GET | `/api/admin/dashboard` | Tong quan he thong |
+| GET | `/api/admin/users` | Danh sach nguoi dung |
+| PUT | `/api/admin/users/:id/status` | Khoa / Mo tai khoan |
+| GET | `/api/admin/rides` | Danh sach chuyen di |
+| PUT | `/api/admin/rides/:id/status` | Sua trang thai ride |
+| GET | `/api/admin/drivers` | Danh sach tai xe |
+| GET | `/api/admin/stats/daily` | Thong ke theo ngay |
+| GET | `/api/admin/stats/revenue` | Thong ke doanh thu |
+
+---
+
+## 7. WebSocket Events
+
+### Driver -> Server
+
+| Event | Payload | Mo ta |
+|-------|---------|-------|
+| `location:update` | `{ lat, lng, rideId? }` | Gui vi tri GPS realtime |
+| `ride:status` | `{ rideId, status }` | Thay doi trang thai |
+
+### Server -> Passenger
+
+| Event | Payload | Mo ta |
+|-------|---------|-------|
+| `driver:location` | `{ lat, lng, rideId, timestamp }` | Vi tri tai xe realtime |
+| `ride:status:changed` | `{ rideId, status, timestamp }` | Trang thai thay doi |
+
+### Chat
+
+| Event | Direction | Mo ta |
+|-------|----------|-------|
+| `chat:message` | Server -> Recipient | Tin nhan moi |
+
+---
+
+## 8. Cau hinh
+
+### 8.1 Backend (.env)
+
+```env
+DB_HOST=localhost
+DB_USER=root
+DB_PASSWORD=1234
+DB_NAME=doan3_db
+DB_PORT=3306
+JWT_SECRET=DoAn3_KhoaTuanAnh_2026_JWT_Secret_Key_xK9mP2vL5nQ8jR4wT7yB3cF6hJ1mN4pL9sZ2aB5dE8fG1
+PORT=3000
+
+# Firebase (cho push notifications)
+FIREBASE_PROJECT_ID=your-project-id
+FIREBASE_CLIENT_EMAIL=firebase-adminsdk-xxxxx@your-project.iam.gserviceaccount.com
+FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
+
+# Email SMTP (cho OTP)
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your-email@gmail.com
+SMTP_PASS=your-app-password
+
+# Payment (VNPay)
+VNPAY_TMN_CODE=YOUR_TMN_CODE
+VNPAY_HASH_SECRET=YOUR_HASH_SECRET
+VNPAY_RETURN_URL=http://localhost:3000/api/payments/vnpay/return
+
+# Payment (MoMo)
+MOMO_PARTNER_CODE=YOUR_PARTNER_CODE
+MOMO_ACCESS_KEY=YOUR_ACCESS_KEY
+MOMO_SECRET_KEY=YOUR_SECRET_KEY
+MOMO_RETURN_URL=http://localhost:3000/api/payments/momo/return
+```
+
+### 8.2 Android (AppConfig.kt)
+
+```kotlin
+// Emulator (mac dinh)
+const val BASE_URL = "http://10.0.2.2:3000/api/"
+
+// May that (cung LAN)
+const val BASE_URL = "http://192.168.x.x:3000/api/"
+```
+
+### 8.3 Android (local.properties)
+
+```properties
+sdk.dir=C\:/Users/LOQ/AppData/Local/Android/sdk
+MAPS_API_KEY=AIzaSyB2uPnpGi9NDtk5dPIhnmMY-ZL8xoZoADo
+```
+
+---
+
+## 9. Tai khoan test
+
+### Khach hang
+
+| Email | Mat khau | Mo ta |
+|-------|----------|-------|
+| passenger@test.com | password123 | Khach hang mau |
+
+### Tai xe
+
+| Email | Mat khau | Trang thai |
+|-------|----------|------------|
+| driver1@test.com | password123 | San sang nhan chuyen |
+| driver2@test.com | password123 | San sang nhan chuyen |
+| driver3@test.com | password123 | San sang nhan chuyen |
+
+### Admin
+
+| Email | Mat khau | Quyen |
+|-------|----------|-------|
+| admin@test.com | password123 | Owner - toan quyen |
+| manager@test.com | password123 | Revenue Manager |
+
+---
+
+## 10. Huong dan cai dat
+
+### 10.1 Backend
+
+```bash
+cd backend
+npm install
+node src/index.js
+```
+
+### 10.2 Database
+
+```bash
+mysql -u root -p
+CREATE DATABASE doan3_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+EXIT
+
+mysql -u root -p doan3_db < backend/src/database/schema.sql
+mysql -u root -p doan3_db < backend/src/database/seed.sql
+```
+
+### 10.3 Android
+
+```bash
+cd app
+.\gradlew assembleDebug
+# APK: app/build/outputs/apk/debug/app-debug.apk
+```
+
+### 10.4 Admin Panel
+
+```bash
+cd admin-panel
+npm install
+npm run dev
+# Chay tai: http://localhost:5173
+```
+
+---
+
+## 11. Cac loi da duoc sua
 
 ### Android
 
-| File | Lỗi | Fix |
-|------|------|-----|
-| `di/AppModule.kt` | `baseUrl` hardcoded | Thay bang `AppConfig.BASE_URL` |
-| `ui/theme/Theme.kt` | Deprecated `window.statusBarColor` | Xoa dong set + import `toArgb` |
-| `ui/components/CommonComponents.kt` | `Icons.Default.ArrowBack` deprecated | `Icons.AutoMirrored.Filled.ArrowBack` |
-| `ui/screens/ProfileScreen.kt` | `Icons.Default.Help/Logout` deprecated | `Icons.AutoMirrored.Filled.*` |
-| `ui/screens/driver/DriverScreens.kt` | `Icons.Default.TrendingUp` deprecated | `Icons.AutoMirrored.Filled.TrendingUp` |
-| `ui/screens/passenger/PassengerHomeScreen.kt` | `Icons.Default.Chat/ArrowForward` deprecated | `Icons.AutoMirrored.Filled.*` |
+| File | Loi | Fix |
+|------|-----|-----|
+| `di/AppModule.kt` | baseUrl hardcoded | AppConfig.BASE_URL |
+| `ui/theme/Theme.kt` | Deprecated statusBarColor | Xoa dong set |
+| `CommonComponents.kt` | Icons.Default ArrowBack | Icons.AutoMirrored.Filled.ArrowBack |
+| `ProfileScreen.kt` | Icons.Default Help/Logout | Icons.AutoMirrored.Filled.* |
+| `DriverScreens.kt` | Icons.Default TrendingUp | Icons.AutoMirrored.Filled.TrendingUp |
+| `PassengerHomeScreen.kt` | Icons.Default Chat/ArrowForward | Icons.AutoMirrored.Filled.* |
+| `ProfileScreen.kt` | NullPointerException driver.name | Null safety + fallback |
+| `AuthViewModel` | Tham so sai thu tu register | Fix thu tu name/email/password/phone |
+| `DriverDto` | name/phone nullable | Chuyen thanh String? |
+| `UserDto` | name/email/phone/userType nullable | Chuyen thanh String? |
+| `SessionManager` | Chua save userType | Luu userType |
+| `ProfileScreen` | sessionManager trong Composable | Chuyen thanh state |
 
 ### Backend
 
-| File | Lỗi | Fix |
-|------|------|-----|
-| `socket/index.js` | `getIO()` tra ve `undefined` (runtime crash) | Them `ioInstance` global variable |
-| `routes/locations.js` | SyntaxError - dau ngoac thua `)` | Xoa dau `)` thua |
+| File | Loi | Fix |
+|------|-----|-----|
+| `socket/index.js` | getIO() undefined (runtime crash) | Them ioInstance global |
+| `routes/locations.js` | SyntaxError dau ngoac thua ) | Xoa dau ) thua |
+| `rides.js` | 2 GET / routes giong nhau | Xoa duplicate, them /active |
+| `rides.js` | Cancellation policy | Them phi huy + log |
+| `rides.js` | Enhanced rating with tags | Them ride_rating_tags |
 
-### Ket qua build
+### Build Results
 
 | Kiem tra | Ket qua |
-|----------|---------|
-| Android Clean Build | BUILD SUCCESSFUL (43 tasks, ~1 phut) |
-| Android APK | `app-debug.apk` - 19.55 MB |
+|----------|--------|
+| Android Clean Build | BUILD SUCCESSFUL (43 tasks) |
+| Android APK | app-debug.apk - 19.55 MB |
 | Android Warnings | 0 |
-| Backend JS Syntax (20 files) | Tat ca OK |
-| APK Path | `app/build/outputs/apk/debug/app-debug.apk` |
+| Android Lint Errors | 0 |
+| Backend JS Syntax (22 files) | Tat ca OK |
+| Admin Panel Build | BUILD SUCCESSFUL |
 
-## 10. Các file quan trọng
-
-| File | Mục đích |
-|------|----------|
-| `AppConfig.kt` | Cấu hình BASE_URL backend |
-| `ApiService.kt` | Interface định nghĩa tất cả API endpoints |
-| `SessionManager.kt` | Lưu trữ token trong SharedPreferences |
-| `AuthScreen.kt` | Giao diện đăng nhập/đăng ký với animation |
-| `PassengerHomeScreen.kt` | Giao diện chính của hành khách |
-| `DriverHomeScreen.kt` | Giao diện chính của tài xế |
-| `AIScreens.kt` | Giao diện các tính năng AI |
-| `schema.sql` | Định nghĩa 11 bảng database |
-| `seed.sql` | Dữ liệu test ban đầu |
-
----
-
-*Tài liệu này được tạo tự động từ codebase DoAn3 - 2026*
+---
+
+## 12. Lich su phat trien
+
+### 2026-05-13 - Phien 3 (Admin + Payments + OTP)
+
+**Admin Panel (Moi):**
+- React + Vite + Tailwind CSS
+- Dashboard, Users, Drivers, Rides, Statistics
+- JWT auth voi admin role check
+
+**Payment:**
+- VNPay HMAC-SHA256 signing
+- MoMo HMAC-SHA256 signing
+- Sandbox auto-fallback khi chua co API keys
+- Payment history CRUD
+
+**OTP / Quen mat khau:**
+- 4 endpoints: forgot-password, verify-otp, reset-password, resend-otp
+- Nodemailer SMTP integration
+- 6 chu so OTP, 10 phut het han
+
+**Database moi:**
+- password_resets, transactions, ride_rating_tags, cancellation_log
+
+### 2026-05-10 - Phien 2 (Maps + Realtime + Chat)
+
+**Google Maps SDK:**
+- TaxiMapView voi markers + polyline
+- Google Maps navigation intent
+- Maps SDK + maps-compose dependencies
+
+**WebSocket Realtime:**
+- Socket.IO client + server
+- Driver location tracking 3s interval
+- Ride status change notifications
+
+**P2P Chat:**
+- Chat screen giua khach va tai xe
+- Socket.IO real-time tin nhan
+- Chat API endpoints
+
+**AI Enhancements:**
+- AI Chat Assistant screen
+- Batch detail screen
+- Enhanced earnings chart
+
+### 2026-05-09 - Phien 1 (Core Features)
+
+**Backend:**
+- Auth, Users, Rides, Drivers, Locations, AI routes
+- 17 bang database (core + AI)
+- JWT authentication, bcrypt password
+- Seed data voi tai khoan test
+
+**Android:**
+- Jetpack Compose UI
+- Hilt DI
+- Retrofit + OkHttp
+- All core screens (Auth, Passenger, Driver, AI)
+- MVVM architecture
+
+---
+
+*Tai lieu nay duoc cap nhat tu dong: 2026-05-13*

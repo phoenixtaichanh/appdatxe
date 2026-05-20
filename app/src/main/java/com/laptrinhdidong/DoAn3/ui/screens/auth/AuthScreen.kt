@@ -191,7 +191,8 @@ class AuthViewModel @javax.inject.Inject constructor(
 @Composable
 fun AuthScreen(
     viewModel: AuthViewModel = hiltViewModel(),
-    onAuthSuccess: (String, String) -> Unit = { _, _ -> }
+    onAuthSuccess: (String, String) -> Unit = { _, _ -> },
+    onNavigateToForgotPassword: () -> Unit = {}
 ) {
     val authState by viewModel.authState.collectAsState()
     val loginForm by viewModel.loginForm.collectAsState()
@@ -247,7 +248,8 @@ fun AuthScreen(
                     if (tab == 0) {
                         LoginForm(email = loginForm.email, onEmailChange = viewModel::updateLoginEmail, emailError = loginForm.emailError,
                             password = loginForm.password, onPasswordChange = viewModel::updateLoginPassword, passwordError = loginForm.passwordError,
-                            onLoginClick = viewModel::login, isLoading = authState.isLoading)
+                            onLoginClick = viewModel::login, isLoading = authState.isLoading,
+                            onNavigateToForgotPassword = onNavigateToForgotPassword)
                     } else {
                         RegisterForm(form = registerForm, userType = authState.userType,
                             onNameChange = viewModel::updateRegisterName, onEmailChange = viewModel::updateRegisterEmail,
@@ -506,7 +508,8 @@ fun SocialLoginButton(icon: androidx.compose.ui.graphics.vector.ImageVector, tex
 // ============ LOGIN FORM ============
 @Composable
 private fun LoginForm(email: String, onEmailChange: (String) -> Unit, emailError: String?, password: String,
-    onPasswordChange: (String) -> Unit, passwordError: String?, onLoginClick: () -> Unit, isLoading: Boolean) {
+    onPasswordChange: (String) -> Unit, passwordError: String?, onLoginClick: () -> Unit, isLoading: Boolean,
+    onNavigateToForgotPassword: () -> Unit = {}) {
     Column {
         AnimatedTextField(value = email, onValueChange = onEmailChange, label = "Email", icon = Icons.Outlined.Email,
             keyboardType = KeyboardType.Email, isError = emailError != null, errorMessage = emailError ?: "")
@@ -515,7 +518,7 @@ private fun LoginForm(email: String, onEmailChange: (String) -> Unit, emailError
             isPassword = true, imeAction = ImeAction.Done, isError = passwordError != null, errorMessage = passwordError ?: "", onDone = onLoginClick)
         Spacer(modifier = Modifier.height(8.dp))
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-            Text(text = "Forgot Password?", fontSize = 13.sp, color = Color(0xFF667eea), modifier = Modifier.clickable { })
+            Text(text = "Forgot Password?", fontSize = 13.sp, color = Color(0xFF667eea), modifier = Modifier.clickable { onNavigateToForgotPassword() })
         }
         Spacer(modifier = Modifier.height(24.dp))
         GradientButton(text = "Login", onClick = onLoginClick, enabled = email.isNotBlank() && password.isNotBlank(), isLoading = isLoading)

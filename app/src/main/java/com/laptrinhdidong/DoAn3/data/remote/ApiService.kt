@@ -16,6 +16,39 @@ interface ApiService {
     @POST("auth/fcm/register")
     suspend fun registerFcmToken(@Body body: Map<String, String?>): Response<Unit>
 
+    // ========== PASSWORD RESET ==========
+    @POST("auth/forgot-password")
+    suspend fun forgotPassword(@Body request: ForgotPasswordRequest): Response<ForgotPasswordResponse>
+
+    @POST("auth/verify-otp")
+    suspend fun verifyOtp(@Body request: VerifyOtpRequest): Response<VerifyOtpResponse>
+
+    @POST("auth/reset-password")
+    suspend fun resetPassword(@Body request: ResetPasswordRequest): Response<ResetPasswordResponse>
+
+    @POST("auth/resend-otp")
+    suspend fun resendOtp(@Body request: ForgotPasswordRequest): Response<ForgotPasswordResponse>
+
+    // ========== PAYMENT ==========
+    @GET("payments/methods")
+    suspend fun getPaymentMethods(): Response<List<PaymentMethodDto>>
+
+    @POST("payments/create")
+    suspend fun createPayment(@Body request: CreatePaymentRequest): Response<CreatePaymentResponse>
+
+    @GET("payments/{id}")
+    suspend fun getPayment(@Path("id") paymentId: Int): Response<PaymentDetailDto>
+
+    @POST("payments/{id}/confirm")
+    suspend fun confirmPayment(@Path("id") paymentId: Int, @Body request: ConfirmPaymentRequest): Response<ConfirmPaymentResponse>
+
+    @GET("payments")
+    suspend fun getPaymentHistory(
+        @Query("type") type: String? = null,
+        @Query("page") page: Int = 1,
+        @Query("limit") limit: Int = 20
+    ): Response<PaymentHistoryResponse>
+
     // ========== USER ==========
     @GET("users/me")
     suspend fun getCurrentUser(): Response<UserDto>
