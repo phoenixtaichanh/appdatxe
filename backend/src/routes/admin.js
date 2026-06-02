@@ -1,22 +1,15 @@
 const express = require('express');
-const auth = require('../middleware/auth');
+const { adminAuth, requirePermission } = require('../middleware/adminAuth');
+const { pool } = require('../database/db');
 
 const router = express.Router();
 
-function requireAdmin(req, res, next) {
-    const allowed = ['owner', 'revenue_manager', 'admin'];
-    if (!allowed.includes(req.user.user_type)) {
-        return res.status(403).json({ success: false, message: 'Admin access required' });
-    }
-    next();
-}
-
-// ========== DASHBOARD ==========
-
-router.get('/dashboard', auth, requireAdmin, async (req, res, next) => {
+// ============================================================
+// DASHBOARD
+// ============================================================
+// POST /api/admin/dashboard
+router.get('/dashboard', adminAuth, requirePermission('dashboard'), async (req, res, next) => {
     try {
-        const { pool } = require('../database/db');
-
         const [userStats] = await pool.query(`
             SELECT
                 COUNT(CASE WHEN user_type = 'passenger' THEN 1 END) as total_passengers,
@@ -54,7 +47,6 @@ router.get('/dashboard', auth, requireAdmin, async (req, res, next) => {
         `);
 
         res.json({
-            success: true,
             data: {
                 users: {
                     total_passengers: parseInt(userStats[0]?.total_passengers || 0),
@@ -81,11 +73,12 @@ router.get('/dashboard', auth, requireAdmin, async (req, res, next) => {
     }
 });
 
-// ========== USER MANAGEMENT ==========
-
-router.get('/users', auth, requireAdmin, async (req, res, next) => {
+// ============================================================
+// USER MANAGEMENT
+// ============================================================
+// GET /api/admin/users
+router.get('/users', adminAuth, requirePermission('manage_users'), async (req, res, next) => {
     try {
-        const { pool } = require('../database/db');
         const { role, search, page = 1, limit = 20 } = req.query;
         const offset = (parseInt(page) - 1) * parseInt(limit);
 
@@ -117,7 +110,6 @@ router.get('/users', auth, requireAdmin, async (req, res, next) => {
         );
 
         res.json({
-            success: true,
             data: rows,
             pagination: {
                 page: parseInt(page),
@@ -130,27 +122,28 @@ router.get('/users', auth, requireAdmin, async (req, res, next) => {
     }
 });
 
-router.put('/users/:id/status', auth, requireAdmin, async (req, res, next) => {
+// PUT /api/admin/users/:id/status
+router.put('/users/:id/status', adminAuth, requirePermission('manage_users'), async (req, res, next) => {
     try {
-        const { pool } = require('../database/db');
-        const { is_active, reason } = req.body;
+        const { is_active } = req.body;
 
         await pool.query(
             'UPDATE users SET is_active = ? WHERE id = ?',
             [is_active ? 1 : 0, req.params.id]
         );
 
-        res.json({ success: true, message: 'User status updated' });
+        res.json({ message: 'Trang thai nguoi dung da duoc cap nhat' });
     } catch (error) {
         next(error);
     }
 });
 
-// ========== RIDE MANAGEMENT ==========
-
-router.get('/rides', auth, requireAdmin, async (req, res, next) => {
+// ============================================================
+// RIDE MANAGEMENT
+// ============================================================
+// GET /api/admin/rides
+router.get('/rides', adminAuth, requirePermission('view_rides'), async (req, res, next) => {
     try {
-        const { pool } = require('../database/db');
         const { status, from_date, to_date, page = 1, limit = 20 } = req.query;
         const offset = (parseInt(page) - 1) * parseInt(limit);
 
@@ -186,7 +179,6 @@ router.get('/rides', auth, requireAdmin, async (req, res, next) => {
         );
 
         res.json({
-            success: true,
             data: rows,
             pagination: {
                 page: parseInt(page),
@@ -199,29 +191,30 @@ router.get('/rides', auth, requireAdmin, async (req, res, next) => {
     }
 });
 
-router.put('/rides/:id/status', auth, requireAdmin, async (req, res, next) => {
+// PUT /api/admin/rides/:id/status
+router.put('/rides/:id/status', adminAuth, requirePermission('manage_rides'), async (req, res, next) => {
     try {
-        const { pool } = require('../database/db');
         const { status } = req.body;
         const validStatuses = ['pending', 'accepted', 'arrived', 'in_progress', 'completed', 'cancelled'];
 
         if (!validStatuses.includes(status)) {
-            return res.status(400).json({ success: false, message: 'Invalid status' });
+            return res.status(400).json({ success: false, message: 'Trang thai khong hop le' });
         }
 
         await pool.query('UPDATE rides SET status = ? WHERE id = ?', [status, req.params.id]);
 
-        res.json({ success: true, message: 'Ride status updated' });
+        res.json({ message: 'Trang thai chuyen di da duoc cap nhat' });
     } catch (error) {
         next(error);
     }
 });
 
-// ========== DRIVER MANAGEMENT ==========
-
-router.get('/drivers', auth, requireAdmin, async (req, res, next) => {
+// ============================================================
+// DRIVER MANAGEMENT
+// ============================================================
+// GET /api/admin/drivers
+router.get('/drivers', adminAuth, requirePermission('view_driver_profiles'), async (req, res, next) => {
     try {
-        const { pool } = require('../database/db');
         const { search, page = 1, limit = 20 } = req.query;
         const offset = (parseInt(page) - 1) * parseInt(limit);
 
@@ -235,7 +228,7 @@ router.get('/drivers', auth, requireAdmin, async (req, res, next) => {
         }
 
         const [rows] = await pool.query(`
-            SELECT u.id, u.name, u.email, u.phone, u.rating, u.total_rides,
+            SELECT u.id, u.name, u.email, u.phone, u.rating, u.total_rides, u.is_active,
                    d.car_model, d.car_color, d.license_plate, d.is_available,
                    d.latitude, d.longitude,
                    (SELECT COALESCE(SUM(amount), 0) FROM earnings e WHERE e.driver_id = u.id AND type = 'ride') as total_earnings
@@ -252,7 +245,6 @@ router.get('/drivers', auth, requireAdmin, async (req, res, next) => {
         );
 
         res.json({
-            success: true,
             data: rows,
             pagination: {
                 page: parseInt(page),
@@ -265,11 +257,28 @@ router.get('/drivers', auth, requireAdmin, async (req, res, next) => {
     }
 });
 
-// ========== STATISTICS ==========
-
-router.get('/stats/daily', auth, requireAdmin, async (req, res, next) => {
+// PUT /api/admin/drivers/:id/status
+router.put('/drivers/:id/status', adminAuth, requirePermission('manage_drivers'), async (req, res, next) => {
     try {
-        const { pool } = require('../database/db');
+        const { is_active } = req.body;
+
+        await pool.query(
+            'UPDATE users SET is_active = ? WHERE id = ?',
+            [is_active ? 1 : 0, req.params.id]
+        );
+
+        res.json({ message: 'Trang thai tai xe da duoc cap nhat' });
+    } catch (error) {
+        next(error);
+    }
+});
+
+// ============================================================
+// STATISTICS & REVENUE
+// ============================================================
+// GET /api/admin/stats/daily
+router.get('/stats/daily', adminAuth, requirePermission('view_revenue'), async (req, res, next) => {
+    try {
         const { days = 30 } = req.query;
 
         const [rows] = await pool.query(`
@@ -285,7 +294,6 @@ router.get('/stats/daily', auth, requireAdmin, async (req, res, next) => {
         `, [parseInt(days)]);
 
         res.json({
-            success: true,
             data: rows.map(r => ({
                 date: r.date instanceof Date ? r.date.toISOString().split('T')[0] : r.date,
                 total_rides: parseInt(r.total_rides),
@@ -298,10 +306,9 @@ router.get('/stats/daily', auth, requireAdmin, async (req, res, next) => {
     }
 });
 
-router.get('/stats/revenue', auth, requireAdmin, async (req, res, next) => {
+// GET /api/admin/stats/revenue
+router.get('/stats/revenue', adminAuth, requirePermission('view_revenue'), async (req, res, next) => {
     try {
-        const { pool } = require('../database/db');
-
         const [today] = await pool.query(`
             SELECT COALESCE(SUM(price), 0) as amount FROM rides WHERE status = 'completed' AND DATE(created_at) = CURDATE()
         `);
@@ -320,13 +327,56 @@ router.get('/stats/revenue', auth, requireAdmin, async (req, res, next) => {
         const change = yesterdayAmount > 0 ? ((todayAmount - yesterdayAmount) / yesterdayAmount) * 100 : 0;
 
         res.json({
-            success: true,
             data: {
                 today: todayAmount,
                 yesterday: yesterdayAmount,
                 this_month: parseFloat(thisMonth[0]?.amount || 0),
                 last_month: parseFloat(lastMonth[0]?.amount || 0),
                 change_percent: Math.round(change * 100) / 100
+            }
+        });
+    } catch (error) {
+        next(error);
+    }
+});
+
+// ============================================================
+// PAYMENT MANAGEMENT
+// ============================================================
+// GET /api/admin/payments
+router.get('/payments', adminAuth, requirePermission('manage_payments'), async (req, res, next) => {
+    try {
+        const { status, page = 1, limit = 20 } = req.query;
+        const offset = (parseInt(page) - 1) * parseInt(limit);
+
+        let whereClause = '1=1';
+        const params = [];
+
+        if (status && status !== 'all') {
+            whereClause += ' AND t.status = ?';
+            params.push(status);
+        }
+
+        const [rows] = await pool.query(`
+            SELECT t.*, u.name as user_name, u.email as user_email
+            FROM transactions t
+            JOIN users u ON t.user_id = u.id
+            WHERE ${whereClause}
+            ORDER BY t.created_at DESC
+            LIMIT ? OFFSET ?
+        `, [...params, parseInt(limit), offset]);
+
+        const [countResult] = await pool.query(
+            `SELECT COUNT(*) as total FROM transactions t WHERE ${whereClause}`,
+            params
+        );
+
+        res.json({
+            data: rows,
+            pagination: {
+                page: parseInt(page),
+                limit: parseInt(limit),
+                total: countResult[0].total
             }
         });
     } catch (error) {

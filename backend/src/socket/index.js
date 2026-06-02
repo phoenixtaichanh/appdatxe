@@ -31,6 +31,11 @@ function initSocket(httpServer) {
 
         socket.join(`user_${id}`);
 
+        // Consultants and admins join the admins room for receiving messages
+        if (['consultant', 'owner', 'admin'].includes(user_type)) {
+            socket.join('admins');
+        }
+
         if (user_type === 'driver') {
             socket.join('drivers');
 
@@ -147,6 +152,29 @@ function initSocket(httpServer) {
 
         socket.on('disconnect', () => {
             console.log(`[Socket] User disconnected: ${id}`);
+        });
+
+        // ====== CONSULTANT CHAT REAL-TIME ======
+        // Join conversation room
+        socket.on('consultant:join', (conversationId) => {
+            socket.join(`consultant_convo_${conversationId}`);
+            console.log(`[Socket] User ${id} joined consultant conversation ${conversationId}`);
+        });
+
+        // Leave conversation room
+        socket.on('consultant:leave', (conversationId) => {
+            socket.leave(`consultant_convo_${conversationId}`);
+            console.log(`[Socket] User ${id} left consultant conversation ${conversationId}`);
+        });
+
+        // Real-time typing indicator
+        socket.on('consultant:typing', ({ conversationId, isTyping }) => {
+            socket.to(`consultant_convo_${conversationId}`).emit('consultant:typing', {
+                conversationId,
+                userId: id,
+                userType: user_type,
+                isTyping
+            });
         });
     });
 

@@ -185,4 +185,42 @@ interface ApiService {
 
     @POST("chat/{rideId}/send")
     suspend fun sendChatMessage(@Path("rideId") rideId: Int, @Body body: Map<String, String>): Response<Map<String, Any>>
+
+    // ========== SUPPORT / FAQ ==========
+    @GET("faq")
+    suspend fun getFAQs(@Query("category") category: String? = null): Response<List<FaqDto>>
+
+    @GET("faq/categories")
+    suspend fun getFAQCategories(): Response<List<FaqCategoryDto>>
+
+    @GET("faq/{id}")
+    suspend fun getFAQDetail(@Path("id") faqId: Int): Response<FaqDto>
+
+    @POST("faq/{id}/helpful")
+    suspend fun rateFAQ(@Path("id") faqId: Int, @Body body: Map<String, Boolean>): Response<Unit>
+
+    // ========== CONSULTANT CHAT ==========
+    @GET("support/conversations")
+    suspend fun getConsultantConversations(
+        @Query("status") status: String? = null,
+        @Query("category") category: String? = null
+    ): Response<List<ConsultantConversationDto>>
+
+    @POST("support/conversations")
+    suspend fun createConsultantConversation(@Body body: Map<String, String>): Response<Map<String, Any>>
+
+    @GET("support/conversations/{id}/messages")
+    suspend fun getConsultantMessages(@Path("id") conversationId: Int): Response<List<ConsultantMessageDto>>
+
+    @POST("support/conversations/{id}/messages")
+    suspend fun sendConsultantMessage(@Path("id") conversationId: Int, @Body body: Map<String, String>): Response<Map<String, Any>>
+
+    @PUT("support/conversations/{id}/resolve")
+    suspend fun resolveConsultantConversation(@Path("id") conversationId: Int): Response<Map<String, Any>>
+
+    @PUT("support/conversations/{id}/close")
+    suspend fun closeConsultantConversation(@Path("id") conversationId: Int, @Body body: Map<String, Any>): Response<Map<String, Any>>
+
+    @GET("support/unread")
+    suspend fun getUnreadConsultantCount(): Response<Map<String, Int>>
 }

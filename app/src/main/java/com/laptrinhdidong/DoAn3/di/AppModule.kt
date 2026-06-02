@@ -11,6 +11,7 @@ import com.laptrinhdidong.DoAn3.data.repository.DriverRepository
 import com.laptrinhdidong.DoAn3.data.repository.PasswordResetRepository
 import com.laptrinhdidong.DoAn3.data.repository.PaymentRepository
 import com.laptrinhdidong.DoAn3.data.repository.RideRepository
+import com.laptrinhdidong.DoAn3.data.repository.SupportRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -119,5 +120,11 @@ object AppModule {
     @Singleton
     fun providePaymentRepository(apiService: ApiService): PaymentRepository {
         return PaymentRepository(apiService)
+    }
+
+    @Provides
+    @Singleton
+    fun provideSupportRepository(apiService: ApiService): SupportRepository {
+        return SupportRepository(apiService)
     }
 }

@@ -23,8 +23,12 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.laptrinhdidong.DoAn3.data.local.SessionManager
 import com.laptrinhdidong.DoAn3.ui.screens.HistoryScreen
+import com.laptrinhdidong.DoAn3.ui.screens.MapLocation
+import com.laptrinhdidong.DoAn3.ui.screens.MapScreen
+import com.laptrinhdidong.DoAn3.ui.screens.DemoScreen
 import com.laptrinhdidong.DoAn3.ui.screens.ProfileScreen
 import com.laptrinhdidong.DoAn3.ui.screens.RideDetailScreen
+import com.laptrinhdidong.DoAn3.ui.screens.SupportScreen
 import com.laptrinhdidong.DoAn3.ui.screens.auth.AuthScreen
 import com.laptrinhdidong.DoAn3.ui.screens.auth.ForgotPasswordScreen
 import com.laptrinhdidong.DoAn3.ui.screens.auth.OtpVerificationScreen
@@ -51,6 +55,9 @@ sealed class Screen(val route: String) {
     object Auth : Screen("auth")
     object PassengerHome : Screen("passenger_home")
     object DriverHome : Screen("driver_home")
+    object Support : Screen("support")
+    object FAQ : Screen("faq")
+    object ConsultantChat : Screen("consultant_chat")
     object RideDetail : Screen("ride_detail/{rideId}/{isDriver}") {
         fun createRoute(rideId: Int, isDriver: Boolean) = "ride_detail/$rideId/$isDriver"
     }
@@ -77,6 +84,11 @@ sealed class Screen(val route: String) {
     object ResetPassword : Screen("reset_password/{email}/{otp}") {
         fun createRoute(email: String, otp: String) = "reset_password/$email/$otp"
     }
+    object MapView : Screen("map_view/{title}/{locationsJson}") {
+        fun createRoute(title: String, locationsJson: String) =
+            "map_view/${title}/${java.net.URLEncoder.encode(locationsJson, "UTF-8")}"
+    }
+    object Demo : Screen("demo")
 }
 
 @HiltViewModel
@@ -132,6 +144,7 @@ fun AppNavigation(
                 onNavigateToHome = { userType ->
                     val destination = when (userType) {
                         "driver" -> Screen.DriverHome.route
+                        "consultant", "owner", "admin", "revenue_manager" -> Screen.Support.route
                         else -> Screen.PassengerHome.route
                     }
                     navController.navigate(destination) {
@@ -147,6 +160,8 @@ fun AppNavigation(
                 onAuthSuccess = { userType, _ ->
                     val destination = when (userType) {
                         "driver" -> Screen.DriverHome.route
+                        "consultant" -> Screen.Support.route
+                        "owner", "admin", "revenue_manager" -> Screen.PassengerHome.route // Admin dashboard can be added later
                         else -> Screen.PassengerHome.route
                     }
                     navController.navigate(destination) {
@@ -160,6 +175,7 @@ fun AppNavigation(
         }
 
         composable(Screen.PassengerHome.route) {
+            val viewModel: MainViewModel = hiltViewModel()
             PassengerHomeScreen(
                 onNavigateToRideDetail = { rideId ->
                     navController.navigate(Screen.RideDetail.createRoute(rideId, false))
@@ -180,7 +196,8 @@ fun AppNavigation(
                     navController.navigate(Screen.Auth.route) {
                         popUpTo(0) { inclusive = true }
                     }
-                }
+                },
+                sessionManager = viewModel.sessionManager
             )
         }
 
@@ -203,6 +220,9 @@ fun AppNavigation(
                 },
                 onNavigateToAISchedule = {
                     navController.navigate(Screen.AISchedule.route)
+                },
+                onNavigateToSupport = {
+                    navController.navigate(Screen.Support.route)
                 },
                 onLogout = {
                     navController.navigate(Screen.Auth.route) {
@@ -235,6 +255,12 @@ fun AppNavigation(
                     navController.navigate(Screen.Auth.route) {
                         popUpTo(0) { inclusive = true }
                     }
+                },
+                onNavigateToSupport = {
+                    navController.navigate(Screen.Support.route)
+                },
+                onNavigateToDemo = {
+                    navController.navigate(Screen.Demo.route)
                 }
             )
         }
@@ -255,7 +281,14 @@ fun AppNavigation(
 
         composable(Screen.AISchedule.route) {
             AIScheduleScreen(
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
+                onOpenMap = { title, locations ->
+                    val locationsJson = locations.joinToString(",") { (name, triple) ->
+                        val (lat, lng, address) = triple
+                        """{"name":"${name.replace("\"","\\\"")}","address":"${address.replace("\"","\\\"")}","lat":$lat,"lng":$lng}"""
+                    }
+                    navController.navigate(Screen.MapView.createRoute(title, locationsJson))
+                }
             )
         }
 
@@ -311,6 +344,58 @@ fun AppNavigation(
         composable(Screen.Earnings.route) {
             EarningsScreen(
                 onBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(Screen.Support.route) {
+            SupportScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(
+            route = Screen.MapView.route,
+            arguments = listOf(
+                navArgument("title") { type = NavType.StringType },
+                navArgument("locationsJson") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val title = backStackEntry.arguments?.getString("title") ?: "Bản đồ"
+            val locationsJson = backStackEntry.arguments?.getString("locationsJson") ?: ""
+            val locations = remember(locationsJson) {
+                try {
+                    val decoded = java.net.URLDecoder.decode(locationsJson, "UTF-8")
+                    val list = mutableListOf<MapLocation>()
+                    val regex = Regex("""\{"name":"([^"]*)","address":"([^"]*)","lat":(-?\d+\.?\d*),"lng":(-?\d+\.?\d*)\}""")
+                    regex.findAll(decoded).forEach { match ->
+                        val (name, address, lat, lng) = match.destructured
+                        list.add(MapLocation(
+                            name = name,
+                            address = address,
+                            lat = lat.toDouble(),
+                            lng = lng.toDouble()
+                        ))
+                    }
+                    list
+                } catch (e: Exception) {
+                    emptyList()
+                }
+            }
+            MapScreen(
+                title = title,
+                locations = locations,
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(Screen.Demo.route) {
+            DemoScreen(
+                onBack = { navController.popBackStack() },
+                onFinished = {
+                    navController.navigate(Screen.PassengerHome.route) {
+                        popUpTo(Screen.Demo.route) { inclusive = true }
+                    }
+                }
             )
         }
 

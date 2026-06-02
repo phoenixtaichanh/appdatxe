@@ -26,7 +26,19 @@ api.interceptors.response.use(
 );
 
 export const authAPI = {
-  login: (email, password) => api.post('/auth/login', { email, password }),
+  login: (email, password) => api.post('/admin-auth/login', { email, password }),
+};
+
+export const supportAPI = {
+  // Chat conversations
+  conversations: (params) => api.get('/admin-support/conversations', { params }),
+  conversation: (id) => api.get(`/admin-support/conversations/${id}`),
+  messages: (id) => api.get(`/admin-support/conversations/${id}/messages`),
+  reply: (id, message) => api.post(`/admin-support/conversations/${id}/reply`, { message }),
+  resolve: (id) => api.put(`/admin-support/conversations/${id}/resolve`),
+  assign: (id, consultantId) => api.put(`/admin-support/conversations/${id}/assign`, { consultant_id: consultantId }),
+  // FAQs
+  faqs: () => api.get('/admin-support/faqs'),
 };
 
 export const adminAPI = {

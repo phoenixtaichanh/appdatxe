@@ -9,6 +9,7 @@ import androidx.compose.material.icons.automirrored.filled.Help
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -167,6 +168,8 @@ class ProfileViewModel @javax.inject.Inject constructor(
 fun ProfileScreen(
     onBack: () -> Unit,
     onLogout: () -> Unit,
+    onNavigateToSupport: () -> Unit = {},
+    onNavigateToDemo: () -> Unit = {},
     viewModel: ProfileViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
@@ -375,7 +378,8 @@ fun ProfileScreen(
                         Column(modifier = Modifier.padding(8.dp)) {
                             SettingsItem(Icons.Default.Notifications, "Thông báo", onClick = {})
                             SettingsItem(Icons.Default.Security, "Bảo mật", onClick = {})
-                            SettingsItem(Icons.AutoMirrored.Filled.Help, "Hỗ trợ", onClick = {})
+                            SettingsItem(Icons.Default.AutoAwesome, "Demo", onClick = onNavigateToDemo, tint = AccentYellow)
+                            SettingsItem(Icons.Default.Support, "Hỗ trợ & FAQ", onClick = onNavigateToSupport)
                             SettingsItem(Icons.Default.Info, "Về ứng dụng", onClick = {})
                             SettingsItem(Icons.AutoMirrored.Filled.Logout, "Đăng xuất", onClick = { viewModel.logout(onLogout) }, tint = AccentRed)
                         }

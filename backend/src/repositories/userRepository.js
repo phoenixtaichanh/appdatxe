@@ -31,14 +31,14 @@ async function updateProfile(id, { name, phone, profileImage }) {
 
 async function updateRating(driverId) {
     const [rows] = await pool.query(`
-        UPDATE users u
-        SET u.rating = (
+        UPDATE users
+        SET rating = (
             SELECT AVG(r2.driver_rating)
-            FROM rides r2
-            WHERE r2.driver_id = u.id AND r2.driver_rating IS NOT NULL
+            FROM (SELECT * FROM rides) r2
+            WHERE r2.driver_id = ? AND r2.driver_rating IS NOT NULL
         )
-        WHERE u.id = ?
-    `, [driverId]);
+        WHERE id = ?
+    `, [driverId, driverId]);
     return rows;
 }
 

@@ -19,12 +19,8 @@ class PasswordResetRepository(
             try {
                 val response = apiService.forgotPassword(ForgotPasswordRequest(email))
                 if (response.isSuccessful) {
-                    val body = response.body()!!
-                    if (body.success) {
-                        Result.success(body)
-                    } else {
-                        Result.failure(Exception(body.message ?: "Failed to send OTP"))
-                    }
+                    response.body()?.let { Result.success(it) }
+                        ?: Result.failure(Exception("Empty response"))
                 } else {
                     Result.failure(Exception("Server error: ${response.code()}"))
                 }
@@ -38,12 +34,8 @@ class PasswordResetRepository(
             try {
                 val response = apiService.verifyOtp(VerifyOtpRequest(email, otpCode))
                 if (response.isSuccessful) {
-                    val body = response.body()!!
-                    if (body.success) {
-                        Result.success(body)
-                    } else {
-                        Result.failure(Exception(body.message ?: "Invalid OTP"))
-                    }
+                    response.body()?.let { Result.success(it) }
+                        ?: Result.failure(Exception("Empty response"))
                 } else {
                     Result.failure(Exception("Server error: ${response.code()}"))
                 }
@@ -57,12 +49,8 @@ class PasswordResetRepository(
             try {
                 val response = apiService.resetPassword(ResetPasswordRequest(email, otpCode, newPassword))
                 if (response.isSuccessful) {
-                    val body = response.body()!!
-                    if (body.success) {
-                        Result.success(body)
-                    } else {
-                        Result.failure(Exception(body.message ?: "Failed to reset password"))
-                    }
+                    response.body()?.let { Result.success(it) }
+                        ?: Result.failure(Exception("Empty response"))
                 } else {
                     Result.failure(Exception("Server error: ${response.code()}"))
                 }
@@ -76,12 +64,8 @@ class PasswordResetRepository(
             try {
                 val response = apiService.resendOtp(ForgotPasswordRequest(email))
                 if (response.isSuccessful) {
-                    val body = response.body()!!
-                    if (body.success) {
-                        Result.success(body)
-                    } else {
-                        Result.failure(Exception(body.message ?: "Failed to resend OTP"))
-                    }
+                    response.body()?.let { Result.success(it) }
+                        ?: Result.failure(Exception("Empty response"))
                 } else {
                     Result.failure(Exception("Server error: ${response.code()}"))
                 }

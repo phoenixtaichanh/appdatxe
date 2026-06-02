@@ -2,6 +2,7 @@ const express = require('express');
 const auth = require('../middleware/auth');
 const driverRepository = require('../repositories/driverRepository');
 const rideRepository = require('../repositories/rideRepository');
+const { pool } = require('../database/db');
 
 const router = express.Router();
 
@@ -24,7 +25,7 @@ router.get('/profile', auth, requireDriver, async (req, res, next) => {
         if (!driver) {
             return res.status(404).json({ success: false, message: 'Driver profile not found' });
         }
-        res.json({ success: true, data: driver });
+        res.json(driver);
     } catch (error) {
         next(error);
     }
@@ -39,7 +40,7 @@ router.put('/profile', auth, requireDriver, async (req, res, next) => {
             name, phone, carModel: car_model, carColor: car_color, licensePlate: license_plate
         });
 
-        res.json({ success: true, message: 'Profile updated', data: driver });
+        res.json(driver);
     } catch (error) {
         next(error);
     }
@@ -54,7 +55,7 @@ router.put('/status', auth, requireDriver, async (req, res, next) => {
             isAvailable: is_available, latitude: latitude || 0, longitude: longitude || 0
         });
 
-        res.json({ success: true, message: 'Status updated', data: driver });
+        res.json(driver);
     } catch (error) {
         next(error);
     }
@@ -63,7 +64,6 @@ router.put('/status', auth, requireDriver, async (req, res, next) => {
 // GET /api/driver/ride/available
 router.get('/ride/available', auth, requireDriver, async (req, res, next) => {
     try {
-        const { pool } = require('../database/db');
         const [rides] = await pool.query(`
             SELECT r.*, p.name as passenger_name, p.phone as passenger_phone
             FROM rides r
@@ -72,7 +72,7 @@ router.get('/ride/available', auth, requireDriver, async (req, res, next) => {
             ORDER BY r.created_at ASC
             LIMIT 20
         `);
-        res.json({ success: true, data: rides });
+        res.json(rides);
     } catch (error) {
         next(error);
     }
@@ -82,8 +82,6 @@ router.get('/ride/available', auth, requireDriver, async (req, res, next) => {
 router.post('/ride/:id/accept', auth, requireDriver, async (req, res, next) => {
     try {
         const { id } = req.params;
-        const { pool } = require('../database/db');
-
         const [rides] = await pool.query('SELECT * FROM rides WHERE id = ? AND status = ?', [id, 'pending']);
         if (rides.length === 0) {
             return res.status(404).json({ success: false, message: 'Ride no longer available' });
@@ -104,7 +102,7 @@ router.post('/ride/:id/accept', auth, requireDriver, async (req, res, next) => {
             }).catch(e => console.error('[FCM] Notify passenger error:', e.message));
         }
 
-        res.json({ success: true, message: 'Ride accepted', data: ride });
+        res.json(ride);
     } catch (error) {
         next(error);
     }
@@ -113,7 +111,18 @@ router.post('/ride/:id/accept', auth, requireDriver, async (req, res, next) => {
 // POST /api/driver/ride/:id/reject
 router.post('/ride/:id/reject', auth, requireDriver, async (req, res, next) => {
     try {
-        res.json({ success: true, message: 'Ride rejected' });
+        const { id } = req.params;
+
+        const [ride] = await pool.query(
+            'SELECT * FROM rides WHERE id = ? AND status = ?', [id, 'pending']
+        );
+
+        if (ride.length === 0) {
+            return res.status(404).json({ success: false, message: 'Ride not found or not available' });
+        }
+
+        // Ride rejection acknowledged - ride stays pending for other drivers
+        res.json({ message: 'Ride rejected' });
     } catch (error) {
         next(error);
     }
@@ -133,7 +142,6 @@ router.put('/ride/:id/status', auth, requireDriver, async (req, res, next) => {
         const ride = await rideRepository.updateStatus(id, status);
 
         if (status === 'completed') {
-            const { pool } = require('../database/db');
             const [rideRow] = await pool.query('SELECT price FROM rides WHERE id = ?', [id]);
             if (rideRow.length > 0) {
                 await driverRepository.recordEarning(req.user.id, id, rideRow[0].price);
@@ -164,7 +172,7 @@ router.put('/ride/:id/status', auth, requireDriver, async (req, res, next) => {
             }
         }
 
-        res.json({ success: true, message: 'Status updated', data: ride });
+        res.json(ride);
     } catch (error) {
         next(error);
     }
@@ -214,24 +222,21 @@ router.get('/earnings', auth, requireDriver, async (req, res, next) => {
         `, [req.user.id]);
 
         res.json({
-            success: true,
-            data: {
-                summary: earnings,
-                daily: dailyRows.map(r => ({
-                    date: r.date instanceof Date ? r.date.toISOString().split('T')[0] : r.date,
-                    amount: parseFloat(r.amount),
-                    ride_count: r.ride_count
-                })),
-                comparison: {
-                    this_week: parseFloat(weekCompare[0]?.this_week || 0),
-                    last_week: parseFloat(weekCompare[0]?.last_week || 0)
-                },
-                stats: {
-                    total_rides: parseInt(rideStats[0]?.total_rides || 0),
-                    avg_rating: parseFloat(rideStats[0]?.avg_rating || 0).toFixed(2),
-                    completed: parseInt(rideStats[0]?.completed || 0),
-                    cancelled: parseInt(rideStats[0]?.cancelled || 0)
-                }
+            summary: earnings,
+            daily: dailyRows.map(r => ({
+                date: r.date instanceof Date ? r.date.toISOString().split('T')[0] : r.date,
+                amount: parseFloat(r.amount),
+                ride_count: r.ride_count
+            })),
+            comparison: {
+                this_week: parseFloat(weekCompare[0]?.this_week || 0),
+                last_week: parseFloat(weekCompare[0]?.last_week || 0)
+            },
+            stats: {
+                total_rides: parseInt(rideStats[0]?.total_rides || 0),
+                avg_rating: parseFloat(rideStats[0]?.avg_rating || 0).toFixed(2),
+                completed: parseInt(rideStats[0]?.completed || 0),
+                cancelled: parseInt(rideStats[0]?.cancelled || 0)
             }
         });
     } catch (error) {
@@ -243,7 +248,7 @@ router.get('/earnings', auth, requireDriver, async (req, res, next) => {
 router.get('/history', auth, requireDriver, async (req, res, next) => {
     try {
         const rides = await rideRepository.findHistoryByUser(req.user.id, 'driver');
-        res.json({ success: true, data: rides });
+        res.json(rides);
     } catch (error) {
         next(error);
     }

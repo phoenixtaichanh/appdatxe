@@ -12,7 +12,7 @@ router.get('/me', auth, async (req, res, next) => {
         if (!user) {
             return res.status(404).json({ success: false, message: 'User not found' });
         }
-        res.json({ success: true, data: user });
+        res.json(user);
     } catch (error) {
         next(error);
     }
@@ -47,7 +47,7 @@ router.get('/:id', auth, async (req, res, next) => {
             return res.status(404).json({ success: false, message: 'User not found' });
         }
 
-        res.json({ success: true, data: user });
+        res.json(user);
     } catch (error) {
         next(error);
     }
@@ -65,7 +65,7 @@ router.put('/:id', auth, async (req, res, next) => {
 
         const user = await userRepository.updateProfile(id, { name, phone, profileImage: profile_image });
 
-        res.json({ success: true, message: 'User updated', data: user });
+        res.json(user);
     } catch (error) {
         next(error);
     }

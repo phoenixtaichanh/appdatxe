@@ -7,6 +7,7 @@ import Users from './pages/Users';
 import Drivers from './pages/Drivers';
 import Rides from './pages/Rides';
 import Statistics from './pages/Statistics';
+import Chat from './pages/Chat';
 
 function ProtectedRoute({ children }) {
   const { token } = useAuth();
@@ -32,6 +33,7 @@ export default function App() {
         <Route path="drivers" element={<Drivers />} />
         <Route path="rides" element={<Rides />} />
         <Route path="statistics" element={<Statistics />} />
+        <Route path="chat" element={<Chat />} />
       </Route>
     </Routes>
   );

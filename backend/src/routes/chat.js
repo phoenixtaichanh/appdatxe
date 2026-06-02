@@ -1,5 +1,6 @@
 const express = require('express');
 const auth = require('../middleware/auth');
+const { pool } = require('../database/db');
 
 const router = express.Router();
 
@@ -14,7 +15,6 @@ try {
 // GET /api/chat/:rideId/messages
 router.get('/:rideId/messages', auth, async (req, res, next) => {
     try {
-        const { pool } = require('../database/db');
         const { rideId } = req.params;
 
         const [messages] = await pool.query(`
@@ -30,7 +30,7 @@ router.get('/:rideId/messages', auth, async (req, res, next) => {
             WHERE ride_id = ? AND sender_id != ?
         `, [rideId, req.user.id]);
 
-        res.json({ success: true, data: messages });
+        res.json(messages);
     } catch (error) {
         next(error);
     }
@@ -39,7 +39,6 @@ router.get('/:rideId/messages', auth, async (req, res, next) => {
 // POST /api/chat/:rideId/send
 router.post('/:rideId/send', auth, async (req, res, next) => {
     try {
-        const { pool } = require('../database/db');
         const { rideId } = req.params;
         const { message, message_type = 'text' } = req.body;
 
@@ -88,7 +87,7 @@ router.post('/:rideId/send', auth, async (req, res, next) => {
             });
         }
 
-        res.status(201).json({ success: true, data: { id: result.insertId } });
+        res.status(201).json({ id: result.insertId });
     } catch (error) {
         next(error);
     }

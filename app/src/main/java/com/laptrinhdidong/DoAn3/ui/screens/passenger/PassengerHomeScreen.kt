@@ -24,6 +24,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.android.gms.maps.model.LatLng
+import com.laptrinhdidong.DoAn3.data.local.SessionManager
 import com.laptrinhdidong.DoAn3.data.remote.SocketManager
 import com.laptrinhdidong.DoAn3.data.remote.dto.DriverDto
 import com.laptrinhdidong.DoAn3.data.remote.dto.RideDto
@@ -279,6 +280,7 @@ fun PassengerHomeScreen(
     onNavigateToProfile: () -> Unit,
     onNavigateToAIChat: () -> Unit,
     onLogout: () -> Unit,
+    sessionManager: SessionManager,
     viewModel: PassengerHomeViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
@@ -309,18 +311,82 @@ fun PassengerHomeScreen(
             routePoints = null,
             onMapClick = { latLng ->
                 if (state.pickupLocation.isEmpty()) {
-                    viewModel.updatePickupLocation(
-                        "Diem don (${String.format("%.4f", latLng.latitude)}, ${String.format("%.4f", latLng.longitude)})",
-                        latLng.latitude, latLng.longitude
-                    )
+                    val addr = "Diem don (${String.format("%.4f", latLng.latitude)}, ${String.format("%.4f", latLng.longitude)})"
+                    viewModel.updatePickupLocation(addr, latLng.latitude, latLng.longitude)
                 } else if (state.destLocation.isEmpty()) {
-                    viewModel.updateDestLocation(
-                        "Diem den (${String.format("%.4f", latLng.latitude)}, ${String.format("%.4f", latLng.longitude)})",
-                        latLng.latitude, latLng.longitude
-                    )
+                    val addr = "Diem den (${String.format("%.4f", latLng.latitude)}, ${String.format("%.4f", latLng.longitude)})"
+                    viewModel.updateDestLocation(addr, latLng.latitude, latLng.longitude)
                 }
             }
         )
+
+        // --- Route info overlay on map (always visible when booking sheet is shown) ---
+        if (showBookingSheet && (state.pickupLocation.isNotEmpty() || state.destLocation.isNotEmpty())) {
+            Card(
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(top = 185.dp)
+                    .padding(horizontal = 16.dp)
+                    .fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = DarkCard.copy(alpha = 0.95f)),
+                elevation = CardDefaults.cardElevation(4.dp)
+            ) {
+                Column(modifier = Modifier.padding(12.dp)) {
+                    // Pickup
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier.size(12.dp).clip(CircleShape)
+                                .background(AccentGreen)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("Diem don", color = TextSecondary, fontSize = 10.sp)
+                            Text(
+                                text = state.pickupLocation.ifEmpty { "Chua chon" },
+                                color = TextPrimary, fontSize = 13.sp,
+                                fontWeight = FontWeight.Medium,
+                                maxLines = 1
+                            )
+                        }
+                    }
+                    // Connector line
+                    if (state.destLocation.isNotEmpty()) {
+                        Row {
+                            Box(
+                                modifier = Modifier
+                                    .width(12.dp)
+                                    .height(16.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Box(modifier = Modifier.width(2.dp).height(16.dp).background(TextSecondary.copy(alpha = 0.4f)))
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Box(modifier = Modifier.weight(1f)) {
+                                Box(modifier = Modifier.height(1.dp).fillMaxWidth().background(TextSecondary.copy(alpha = 0.2f)))
+                            }
+                        }
+                        // Dropoff
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier.size(12.dp).clip(CircleShape)
+                                    .background(AccentRed)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text("Diem den", color = TextSecondary, fontSize = 10.sp)
+                                Text(
+                                    text = state.destLocation.ifEmpty { "Chua chon" },
+                                    color = TextPrimary, fontSize = 13.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    maxLines = 1
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
         state.nearbyDrivers.take(3).forEachIndexed { index, driver ->
             val offsets = listOf(Pair(-80f, 100f), Pair(80f, 150f), Pair(0f, 200f))
@@ -384,142 +450,222 @@ fun PassengerHomeScreen(
             }
         }
 
-        Row(
+        // ====== BEAUTIFUL TOP ACTION BAR ======
+        Card(
             modifier = Modifier
                 .fillMaxWidth()
                 .statusBarsPadding()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(containerColor = DarkCard.copy(alpha = 0.95f)),
+            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
         ) {
-            Card(
-                modifier = Modifier.clickable(onClick = { showBookingSheet = true }),
-                shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(containerColor = DarkCard)
-            ) {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                // Top row: greeting + profile
                 Row(
-                    modifier = Modifier.padding(12.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Search,
-                        contentDescription = null,
-                        tint = PrimaryPurple
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Dat xe ngay",
-                        color = TextPrimary,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(44.dp)
+                                .clip(CircleShape)
+                                .background(
+                                    Brush.linearGradient(
+                                        listOf(PrimaryPurple, PrimaryPink)
+                                    )
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = sessionManager.userName?.firstOrNull()?.uppercase() ?: "U",
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 18.sp
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column {
+                            Text(
+                                text = "Xin chào!",
+                                color = TextSecondary,
+                                fontSize = 12.sp
+                            )
+                            Text(
+                                text = sessionManager.userName ?: "Hành khách",
+                                color = TextPrimary,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                    }
+                    IconButton(
+                        onClick = onNavigateToProfile,
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(PrimaryPurple.copy(alpha = 0.15f))
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = "Profile",
+                            tint = PrimaryPurple,
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
                 }
-            }
 
-            Row {
-                IconButton(onClick = onNavigateToAIChat) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.Chat,
-                        contentDescription = "AI Chat",
-                        tint = AccentBlue
+                HorizontalDivider(
+                    color = Color.White.copy(alpha = 0.06f),
+                    thickness = 1.dp
+                )
+
+                // Main action bar - scrollable row of quick actions
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp, vertical = 10.dp),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    ActionBarButton(
+                        icon = Icons.Default.DirectionsCar,
+                        label = "Đặt xe",
+                        iconColor = PrimaryPurple,
+                        bgColor = PrimaryPurple.copy(alpha = 0.15f),
+                        onClick = { showBookingSheet = true }
                     )
-                }
-                IconButton(onClick = onNavigateToAISchedule) {
-                    Icon(
-                        imageVector = Icons.Default.AutoAwesome,
-                        contentDescription = "AI Schedule",
-                        tint = PrimaryPink
+                    ActionBarButton(
+                        icon = Icons.Default.Schedule,
+                        label = "Lịch trình",
+                        iconColor = AccentBlue,
+                        bgColor = AccentBlue.copy(alpha = 0.15f),
+                        onClick = onNavigateToAISchedule
                     )
-                }
-                IconButton(onClick = onNavigateToHistory) {
-                    Icon(
-                        imageVector = Icons.Default.History,
-                        contentDescription = "History",
-                        tint = TextPrimary
+                    ActionBarButton(
+                        icon = Icons.Default.AutoAwesome,
+                        label = "AI Chat",
+                        iconColor = PrimaryPink,
+                        bgColor = PrimaryPink.copy(alpha = 0.15f),
+                        onClick = onNavigateToAIChat
                     )
-                }
-                IconButton(onClick = onNavigateToProfile) {
-                    Icon(
-                        imageVector = Icons.Default.Person,
-                        contentDescription = "Profile",
-                        tint = TextPrimary
+                    ActionBarButton(
+                        icon = Icons.Default.History,
+                        label = "Lịch sử",
+                        iconColor = AccentOrange,
+                        bgColor = AccentOrange.copy(alpha = 0.15f),
+                        onClick = onNavigateToHistory
                     )
-                }
-                IconButton(onClick = onLogout) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.Logout,
-                        contentDescription = "Logout",
-                        tint = AccentRed
+                    ActionBarButton(
+                        icon = Icons.AutoMirrored.Filled.Logout,
+                        label = "Đăng xuất",
+                        iconColor = AccentRed,
+                        bgColor = AccentRed.copy(alpha = 0.15f),
+                        onClick = onLogout
                     )
                 }
             }
         }
 
+        // Quick action shortcut: Dat xe ngay
+        Card(
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .statusBarsPadding()
+                .padding(top = 185.dp)
+                .clickable { showBookingSheet = true },
+            shape = RoundedCornerShape(50.dp),
+            colors = CardDefaults.cardColors(containerColor = PrimaryPurple)
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Search,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Đặt xe ngay",
+                    color = Color.White,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+        }
+
+        // Bottom: booking shortcut + destination card
         Column(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
-                .padding(16.dp)
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 16.dp)
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                QuickActionCard(
-                    icon = Icons.Default.Schedule,
-                    title = "Lich trinh",
-                    subtitle = "AI toi uu",
-                    onClick = onNavigateToAISchedule,
-                    modifier = Modifier.weight(1f),
-                    gradient = GradientPrimary
-                )
-                QuickActionCard(
-                    icon = Icons.Default.History,
-                    title = "Lich su",
-                    subtitle = "Chuyen di",
-                    onClick = onNavigateToHistory,
-                    modifier = Modifier.weight(1f),
-                    gradient = listOf(AccentBlue, AccentBlue.copy(alpha = 0.7f))
-                )
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
+            // Booking shortcut card
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable { showBookingSheet = true },
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = DarkCard)
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = DarkCard),
+                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clip(CircleShape)
+                            .background(PrimaryPurple.copy(alpha = 0.15f)),
+                        contentAlignment = Alignment.Center
+                    ) {
                         Icon(
-                            imageVector = Icons.Default.Place,
+                            imageVector = Icons.Default.DirectionsCar,
+                            contentDescription = null,
+                            tint = PrimaryPurple,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Bạn muốn đi đâu?",
+                            color = TextPrimary,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Text(
+                            text = "Nhập điểm đến của bạn",
+                            color = TextSecondary,
+                            fontSize = 13.sp
+                        )
+                    }
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(AccentGreen.copy(alpha = 0.15f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                             contentDescription = null,
                             tint = AccentGreen,
                             modifier = Modifier.size(20.dp)
                         )
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Text(
-                            text = "Di dau?",
-                            color = TextPrimary,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            modifier = Modifier.weight(1f)
-                        )
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                            contentDescription = null,
-                            tint = PrimaryPurple
-                        )
                     }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "Nhap diem den cua ban",
-                        color = TextSecondary,
-                        fontSize = 13.sp
-                    )
                 }
             }
         }
@@ -541,14 +687,12 @@ fun PassengerHomeScreen(
                 onRequestRide = { viewModel.requestRide() },
                 onDismiss = {
                     showBookingSheet = false
-                    viewModel.stopDriverSearch()
                     if (state.isRideActive) {
                         state.currentRide?.let { onNavigateToRideDetail(it.id) }
                     }
                 },
                 onClose = {
                     showBookingSheet = false
-                    viewModel.stopDriverSearch()
                 }
             )
         }
@@ -611,6 +755,46 @@ private fun QuickActionCard(
     }
 }
 
+@Composable
+private fun ActionBarButton(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    label: String,
+    iconColor: Color,
+    bgColor: Color,
+    onClick: () -> Unit
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .clip(RoundedCornerShape(12.dp))
+            .clickable(onClick = onClick)
+            .padding(vertical = 4.dp, horizontal = 4.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(42.dp)
+                .clip(CircleShape)
+                .background(bgColor),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = label,
+                tint = iconColor,
+                modifier = Modifier.size(20.dp)
+            )
+        }
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = label,
+            color = TextSecondary,
+            fontSize = 10.sp,
+            fontWeight = FontWeight.Medium,
+            maxLines = 1
+        )
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun BookingBottomSheet(
@@ -637,6 +821,13 @@ private fun BookingBottomSheet(
         Triple("Landmark 81", 10.7952, 106.7218),
         Triple("Saigon Zoo", 10.7870, 106.7055)
     )
+
+    // Pre-fill pickup with default location so marker is visible on map immediately
+    LaunchedEffect(Unit) {
+        val defaultPickup = demoLocations.first()
+        pickupText = defaultPickup.first
+        onPickupChange(defaultPickup.first, defaultPickup.second, defaultPickup.third)
+    }
 
     ModalBottomSheet(
         onDismissRequest = onClose,

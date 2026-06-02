@@ -1,8 +1,9 @@
 const express = require('express');
 const auth = require('../middleware/auth');
+const { pool } = require('../database/db');
 const rideRepository = require('../repositories/rideRepository');
 const driverRepository = require('../repositories/driverRepository');
-const { pool } = require('../database/db');
+const { getIO } = require('../socket');
 
 const router = express.Router();
 
@@ -25,7 +26,26 @@ router.post('/request', auth, async (req, res, next) => {
             vehicleType: vehicleType
         });
 
-        res.status(201).json({ success: true, message: 'Ride requested', data: ride });
+        // Notify all online drivers about the new ride via Socket.IO
+        const io = getIO();
+        if (io) {
+            io.to('drivers').emit('new_ride', {
+                rideId: ride.id,
+                pickupLat: ride.pickup_lat,
+                pickupLng: ride.pickup_lng,
+                pickupAddress: ride.pickup_address,
+                destAddress: ride.dest_address,
+                vehicleType: ride.vehicle_type,
+                distanceKm: ride.distance_km,
+                durationMin: ride.duration_min,
+                price: ride.estimated_price,
+                passengerName: req.user.name,
+                timestamp: Date.now()
+            });
+            console.log(`[Socket] Emitted new_ride to drivers room: ride #${ride.id}`);
+        }
+
+        res.status(201).json(ride);
     } catch (error) {
         next(error);
     }
@@ -35,7 +55,7 @@ router.post('/request', auth, async (req, res, next) => {
 router.get('/', auth, async (req, res, next) => {
     try {
         const rides = await rideRepository.findHistoryByUser(req.user.id, req.user.user_type);
-        res.json({ success: true, data: rides });
+        res.json(rides);
     } catch (error) {
         next(error);
     }
@@ -45,7 +65,7 @@ router.get('/', auth, async (req, res, next) => {
 router.get('/active', auth, async (req, res, next) => {
     try {
         const ride = await rideRepository.findActiveByUser(req.user.id, req.user.user_type);
-        res.json({ success: true, data: ride || null });
+        res.json(ride || null);
     } catch (error) {
         next(error);
     }
@@ -58,7 +78,7 @@ router.get('/:id', auth, async (req, res, next) => {
         if (!ride) {
             return res.status(404).json({ success: false, message: 'Ride not found' });
         }
-        res.json({ success: true, data: ride });
+        res.json(ride);
     } catch (error) {
         next(error);
     }
@@ -75,7 +95,11 @@ router.put('/:id/status', auth, async (req, res, next) => {
             return res.status(400).json({ success: false, message: 'Invalid status' });
         }
 
-        const ride = await rideRepository.updateStatus(id, status);
+        const ride = await rideRepository.updateStatus(id, status, req.user.id, req.user.user_type);
+
+        if (!ride) {
+            return res.status(403).json({ success: false, message: 'You do not have permission to update this ride' });
+        }
 
         if (status === 'accepted' && req.user.user_type === 'driver') {
             await rideRepository.assignDriver(id, req.user.id);
@@ -86,7 +110,7 @@ router.put('/:id/status', auth, async (req, res, next) => {
             await driverRepository.setAvailable(req.user.id);
         }
 
-        res.json({ success: true, message: 'Status updated', data: ride });
+        res.json(ride);
     } catch (error) {
         next(error);
     }
@@ -106,7 +130,15 @@ router.post('/:id/rate', auth, async (req, res, next) => {
             rating, comment, raterType: req.user.user_type, tags: tags || []
         });
 
-        res.json({ success: true, message: 'Rating submitted', data: ride });
+        res.json({
+            message: 'Rating submitted',
+            data: {
+                ride_id: id,
+                rating,
+                comment: comment || null,
+                tags: tags || []
+            }
+        });
     } catch (error) {
         next(error);
     }
@@ -230,7 +262,6 @@ router.post('/:id/cancel', auth, async (req, res, next) => {
         }
 
         res.json({
-            success: true,
             message: 'Ride cancelled',
             data: {
                 ride_id: id,
@@ -295,7 +326,6 @@ router.get('/search', auth, async (req, res, next) => {
         );
 
         res.json({
-            success: true,
             data: rows,
             pagination: {
                 page: parseInt(page),

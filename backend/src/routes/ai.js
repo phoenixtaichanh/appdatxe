@@ -25,7 +25,7 @@ router.post('/schedule/create', auth, async (req, res, next) => {
             waypoints
         });
 
-        res.status(201).json({ success: true, message: 'AI schedule created', data: schedule });
+        res.status(201).json(schedule);
     } catch (error) {
         next(error);
     }
@@ -38,7 +38,7 @@ router.get('/schedule/:id', auth, async (req, res, next) => {
         if (!schedule) {
             return res.status(404).json({ success: false, message: 'Schedule not found' });
         }
-        res.json({ success: true, data: schedule });
+        res.json(schedule);
     } catch (error) {
         next(error);
     }
@@ -49,7 +49,7 @@ router.put('/schedule/:id', auth, async (req, res, next) => {
     try {
         const { schedule_name, status } = req.body;
         const schedule = await aiRepository.updateSchedule(parseInt(req.params.id), { scheduleName: schedule_name, status });
-        res.json({ success: true, message: 'Schedule updated', data: schedule });
+        res.json(schedule);
     } catch (error) {
         next(error);
     }
@@ -59,7 +59,7 @@ router.put('/schedule/:id', auth, async (req, res, next) => {
 router.get('/schedule/:id/alternatives', auth, async (req, res, next) => {
     try {
         const alternatives = await aiRepository.getAlternatives(parseInt(req.params.id));
-        res.json({ success: true, data: alternatives });
+        res.json(alternatives);
     } catch (error) {
         next(error);
     }
@@ -73,7 +73,7 @@ router.post('/schedule/:id/optimize', auth, async (req, res, next) => {
             parseInt(req.params.id),
             optimization_type || 'balanced'
         );
-        res.json({ success: true, message: 'Schedule re-optimized', data: alternatives });
+        res.json(alternatives);
     } catch (error) {
         next(error);
     }
@@ -85,7 +85,7 @@ router.post('/schedule/:id/optimize', auth, async (req, res, next) => {
 router.get('/profile', auth, async (req, res, next) => {
     try {
         const profile = await aiRepository.getProfile(req.user.id);
-        res.json({ success: true, data: profile });
+        res.json(profile);
     } catch (error) {
         next(error);
     }
@@ -105,7 +105,7 @@ router.put('/profile', auth, async (req, res, next) => {
             avoidLocations: avoid_locations
         });
 
-        res.json({ success: true, message: 'AI profile updated', data: profile });
+        res.json(profile);
     } catch (error) {
         next(error);
     }
@@ -117,7 +117,7 @@ router.put('/profile', auth, async (req, res, next) => {
 router.get('/recommendations', auth, async (req, res, next) => {
     try {
         const recommendations = await aiRepository.getRecommendations(req.user.id);
-        res.json({ success: true, data: recommendations });
+        res.json(recommendations);
     } catch (error) {
         next(error);
     }
@@ -136,7 +136,7 @@ router.post('/route/preview', auth, async (req, res, next) => {
         }
 
         const preview = await aiRepository.previewRoute(waypoints);
-        res.json({ success: true, data: preview });
+        res.json(preview);
     } catch (error) {
         next(error);
     }
@@ -161,7 +161,7 @@ router.post('/rides/optimize', auth, async (req, res, next) => {
             });
         }
 
-        res.json({ success: true, data: result });
+        res.json(result);
     } catch (error) {
         next(error);
     }
@@ -176,7 +176,7 @@ router.get('/batch/available', auth, async (req, res, next) => {
             return res.status(403).json({ success: false, message: 'Driver access only' });
         }
         const batches = await aiRepository.getAvailableBatches(req.user.id);
-        res.json({ success: true, data: batches });
+        res.json(batches);
     } catch (error) {
         next(error);
     }
@@ -189,7 +189,7 @@ router.post('/batch/:id/accept', auth, async (req, res, next) => {
             return res.status(403).json({ success: false, message: 'Driver access only' });
         }
         const batch = await aiRepository.acceptBatch(parseInt(req.params.id), req.user.id);
-        res.json({ success: true, message: 'Batch accepted', data: batch });
+        res.json(batch);
     } catch (error) {
         next(error);
     }
@@ -202,7 +202,7 @@ router.post('/batch/:id/reject', auth, async (req, res, next) => {
             return res.status(403).json({ success: false, message: 'Driver access only' });
         }
         await aiRepository.rejectBatch(parseInt(req.params.id), req.user.id);
-        res.json({ success: true, message: 'Batch rejected' });
+        res.json({ success: true });
     } catch (error) {
         next(error);
     }
@@ -214,7 +214,7 @@ router.post('/batch/:id/reject', auth, async (req, res, next) => {
 router.get('/history', auth, async (req, res, next) => {
     try {
         const schedules = await aiRepository.getHistory(req.user.id);
-        res.json({ success: true, data: schedules });
+        res.json(schedules);
     } catch (error) {
         next(error);
     }

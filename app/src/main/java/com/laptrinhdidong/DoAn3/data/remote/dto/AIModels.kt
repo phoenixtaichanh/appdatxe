@@ -15,10 +15,10 @@ data class WaypointDto(
     val lat: Double,
     val lng: Double,
     val address: String,
-    val stop_name: String? = null,
-    val stop_type: String = "stopover",
+    @SerializedName("stop_name") val stopName: String? = null,
+    @SerializedName("stop_type") val stopType: String = "stopover",
     val priority: Int = 0,
-    val is_optional: Boolean = false
+    @SerializedName("is_optional") val isOptional: Boolean = false
 )
 
 data class AIScheduleDto(

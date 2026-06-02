@@ -39,10 +39,15 @@ class SplashViewModel @Inject constructor(
         delay(2000)
         val isLoggedIn = sessionManager.isLoggedIn
         val userType = sessionManager.userType
-        _destination.value = when {
-            isLoggedIn && userType == "driver" -> SplashDestination.Home("driver")
-            isLoggedIn && userType == "passenger" -> SplashDestination.Home("passenger")
-            else -> SplashDestination.Auth()
+        _destination.value = if (!isLoggedIn) {
+            SplashDestination.Auth()
+        } else {
+            when (userType) {
+                "driver" -> SplashDestination.Home("driver")
+                "consultant" -> SplashDestination.Home("consultant")
+                "owner", "admin", "revenue_manager" -> SplashDestination.Home("admin")
+                else -> SplashDestination.Home("passenger")
+            }
         }
     }
 }

@@ -35,6 +35,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import com.laptrinhdidong.DoAn3.data.repository.AuthRepository
+import com.laptrinhdidong.DoAn3.data.local.SessionManager
 
 // ============ THEME COLORS ============
 private val GradientColors = listOf(
@@ -64,17 +65,23 @@ data class RegisterFormState(
     val phone: String = "",
     val password: String = "",
     val confirmPassword: String = "",
+    val vehicleType: String = "motorbike",
+    val carModel: String = "",
+    val carPlate: String = "",
     val nameError: String? = null,
     val emailError: String? = null,
     val phoneError: String? = null,
     val passwordError: String? = null,
-    val confirmPasswordError: String? = null
+    val confirmPasswordError: String? = null,
+    val carModelError: String? = null,
+    val carPlateError: String? = null
 )
 
 // ============ AUTH VIEWMODEL ============
 @dagger.hilt.android.lifecycle.HiltViewModel
 class AuthViewModel @javax.inject.Inject constructor(
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val sessionManager: com.laptrinhdidong.DoAn3.data.local.SessionManager
 ) : ViewModel() {
 
     private val _authState = MutableStateFlow(AuthState())
@@ -114,6 +121,18 @@ class AuthViewModel @javax.inject.Inject constructor(
         _registerForm.value = _registerForm.value.copy(confirmPassword = confirmPassword, confirmPasswordError = null)
     }
 
+    fun updateVehicleType(vehicleType: String) {
+        _registerForm.value = _registerForm.value.copy(vehicleType = vehicleType)
+    }
+
+    fun updateCarModel(carModel: String) {
+        _registerForm.value = _registerForm.value.copy(carModel = carModel, carModelError = null)
+    }
+
+    fun updateCarPlate(carPlate: String) {
+        _registerForm.value = _registerForm.value.copy(carPlate = carPlate, carPlateError = null)
+    }
+
     fun updateUserType(userType: String) {
         _authState.value = _authState.value.copy(userType = userType)
     }
@@ -141,6 +160,9 @@ class AuthViewModel @javax.inject.Inject constructor(
             _authState.value = _authState.value.copy(isLoading = true, errorMessage = null)
             val result = authRepository.login(form.email, form.password)
             result.onSuccess { response ->
+                response.user?.userType?.let { serverType ->
+                    _authState.value = _authState.value.copy(userType = serverType)
+                }
                 _authState.value = _authState.value.copy(isLoading = false, isSuccess = true)
             }.onFailure { e ->
                 _authState.value = _authState.value.copy(
@@ -167,12 +189,25 @@ class AuthViewModel @javax.inject.Inject constructor(
         if (form.password.length < 6) { newForm = newForm.copy(passwordError = "Password must be at least 6 characters"); hasError = true }
         if (form.password != form.confirmPassword) { newForm = newForm.copy(confirmPasswordError = "Passwords do not match"); hasError = true }
 
+        // Driver-specific validation
+        if (auth.userType == "driver") {
+            if (form.carModel.isBlank()) { newForm = newForm.copy(carModelError = "Mau xe la bat buoc"); hasError = true }
+            if (form.carPlate.isBlank()) { newForm = newForm.copy(carPlateError = "Bien so xe la bat buoc"); hasError = true }
+        }
+
         if (hasError) { _registerForm.value = newForm; return }
 
         viewModelScope.launch {
             _authState.value = _authState.value.copy(isLoading = true, errorMessage = null)
-            val result = authRepository.register(form.name, form.email, form.password, form.phone, auth.userType)
+            val vehicleTypeToSend = if (auth.userType == "driver") form.vehicleType else null
+            val carModelToSend = if (auth.userType == "driver") form.carModel else null
+            val carColorToSend = if (auth.userType == "driver") "" else null
+            val carPlateToSend = if (auth.userType == "driver") form.carPlate else null
+            val result = authRepository.register(form.name, form.email, form.password, form.phone, auth.userType, vehicleTypeToSend, carModelToSend, carColorToSend, carPlateToSend)
             result.onSuccess { response ->
+                response.user?.userType?.let { serverType ->
+                    _authState.value = _authState.value.copy(userType = serverType)
+                }
                 _authState.value = _authState.value.copy(isLoading = false, isSuccess = true)
             }.onFailure { e ->
                 _authState.value = _authState.value.copy(
@@ -254,8 +289,9 @@ fun AuthScreen(
                         RegisterForm(form = registerForm, userType = authState.userType,
                             onNameChange = viewModel::updateRegisterName, onEmailChange = viewModel::updateRegisterEmail,
                             onPhoneChange = viewModel::updateRegisterPhone, onPasswordChange = viewModel::updateRegisterPassword,
-                            onConfirmPasswordChange = viewModel::updateRegisterConfirmPassword, onRegisterClick = viewModel::register,
-                            isLoading = authState.isLoading)
+                            onConfirmPasswordChange = viewModel::updateRegisterConfirmPassword,
+                            onVehicleTypeChange = viewModel::updateVehicleType, onCarModelChange = viewModel::updateCarModel, onCarPlateChange = viewModel::updateCarPlate,
+                            onRegisterClick = viewModel::register, isLoading = authState.isLoading)
                     }
                 }
 
@@ -345,36 +381,197 @@ fun AnimatedTabSwitcher(selectedTab: Int, onTabSelected: (Int) -> Unit, modifier
 }
 
 // ============ USER TYPE SELECTOR ============
+private data class UserTypeOption(
+    val key: String,
+    val title: String,
+    val description: String,
+    val icon: androidx.compose.ui.graphics.vector.ImageVector,
+    val color: Color
+)
+
+private val allUserTypes = listOf(
+    UserTypeOption("passenger", "Khach hang", "Dat xe di chuyen", Icons.Default.Person, Color(0xFF667eea)),
+    UserTypeOption("driver", "Tai xe", "Nhan chuyen xe", Icons.Default.LocalTaxi, Color(0xFF00C853))
+)
+
 @Composable
 private fun UserTypeSelector(selectedType: String, onTypeSelected: (String) -> Unit) {
     Column {
-        Text(text = "I want to:", fontSize = 14.sp, color = Color.White.copy(alpha = 0.7f), modifier = Modifier.padding(bottom = 12.dp))
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            UserTypeCard(title = "Passenger", description = "Đặt xe đi lại", icon = Icons.Default.Person,
-                isSelected = selectedType == "passenger", onClick = { onTypeSelected("passenger") }, modifier = Modifier.weight(1f))
-            UserTypeCard(title = "Driver", description = "Nhận chuyến xe", icon = Icons.Default.LocalTaxi,
-                isSelected = selectedType == "driver", onClick = { onTypeSelected("driver") }, modifier = Modifier.weight(1f))
+        Text(
+            text = "Chọn loại tài khoản:",
+            fontSize = 14.sp,
+            color = Color.White.copy(alpha = 0.7f),
+            modifier = Modifier.padding(bottom = 12.dp)
+        )
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            allUserTypes.forEach { option ->
+                UserTypeCardOption(
+                    option = option,
+                    isSelected = selectedType == option.key,
+                    onClick = { onTypeSelected(option.key) },
+                    modifier = Modifier.weight(1f)
+                )
+            }
         }
     }
 }
 
 @Composable
-private fun UserTypeCard(title: String, description: String, icon: androidx.compose.ui.graphics.vector.ImageVector,
-    isSelected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    val borderColor by animateColorAsState(targetValue = if (isSelected) Color(0xFF667eea) else Color.Transparent,
-        animationSpec = tween(300), label = "border")
-    val scale by animateFloatAsState(targetValue = if (isSelected) 1.02f else 1f,
-        animationSpec = spring(stiffness = Spring.StiffnessMedium), label = "scale")
+private fun UserTypeCardOption(
+    option: UserTypeOption,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val borderColor by animateColorAsState(
+        targetValue = if (isSelected) option.color else Color.Transparent,
+        animationSpec = tween(300), label = "border"
+    )
+    val scale by animateFloatAsState(
+        targetValue = if (isSelected) 1.03f else 1f,
+        animationSpec = spring(stiffness = Spring.StiffnessMedium), label = "scale"
+    )
 
-    Card(modifier = modifier.scale(scale).clickable { onClick() }, shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = if (isSelected) Color(0xFF667eea).copy(alpha = 0.2f) else Color.White.copy(alpha = 0.05f)),
-        border = androidx.compose.foundation.BorderStroke(width = if (isSelected) 2.dp else 0.dp, color = borderColor)) {
-        Column(modifier = Modifier.fillMaxWidth().padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            Icon(imageVector = icon, contentDescription = null,
-                tint = if (isSelected) Color(0xFF667eea) else Color.White.copy(alpha = 0.7f), modifier = Modifier.size(32.dp))
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(text = title, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.White)
-            Text(text = description, fontSize = 11.sp, color = Color.White.copy(alpha = 0.6f))
+    Card(
+        modifier = modifier.scale(scale).clickable { onClick() },
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isSelected) option.color.copy(alpha = 0.2f)
+            else Color.White.copy(alpha = 0.05f)
+        ),
+        border = androidx.compose.foundation.BorderStroke(
+            width = if (isSelected) 2.dp else 0.dp,
+            color = borderColor
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .background(if (isSelected) option.color else option.color.copy(alpha = 0.5f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = option.icon,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(
+                text = option.title,
+                fontSize = 11.sp,
+                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                color = Color.White,
+                maxLines = 1
+            )
+            Text(
+                text = option.description,
+                fontSize = 9.sp,
+                color = Color.White.copy(alpha = 0.6f),
+                maxLines = 1
+            )
+        }
+    }
+}
+
+// ============ VEHICLE TYPE SELECTOR ============
+private data class VehicleTypeOption(
+    val key: String,
+    val title: String,
+    val subtitle: String,
+    val icon: androidx.compose.ui.graphics.vector.ImageVector,
+    val color: Color
+)
+
+private val allVehicleTypes = listOf(
+    VehicleTypeOption("motorbike", "Xe may", "Cho 1-2 nguoi", Icons.Default.TwoWheeler, Color(0xFFFF9800)),
+    VehicleTypeOption("car_4_seats", "O to 4 cho", "Cho 1-4 nguoi", Icons.Default.DirectionsCar, Color(0xFF2196F3)),
+    VehicleTypeOption("car_7_seats", "O to 7 cho", "Cho 5-7 nguoi", Icons.Default.AirportShuttle, Color(0xFF4CAF50))
+)
+
+@Composable
+private fun VehicleTypeSelector(selectedType: String, onTypeSelected: (String) -> Unit) {
+    Column {
+        Text(
+            text = "Loai phuong tien:",
+            fontSize = 14.sp,
+            color = Color.White.copy(alpha = 0.7f),
+            modifier = Modifier.padding(bottom = 12.dp)
+        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            allVehicleTypes.forEach { option ->
+                VehicleTypeCardOption(
+                    option = option,
+                    isSelected = selectedType == option.key,
+                    onClick = { onTypeSelected(option.key) },
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun VehicleTypeCardOption(
+    option: VehicleTypeOption,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val borderColor by animateColorAsState(
+        targetValue = if (isSelected) option.color else Color.Transparent,
+        animationSpec = tween(300), label = "border"
+    )
+
+    Card(
+        modifier = modifier.clickable { onClick() },
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isSelected) option.color.copy(alpha = 0.2f)
+            else Color.White.copy(alpha = 0.05f)
+        ),
+        border = androidx.compose.foundation.BorderStroke(
+            width = if (isSelected) 2.dp else 0.dp,
+            color = borderColor
+        )
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(10.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Icon(
+                imageVector = option.icon,
+                contentDescription = null,
+                tint = if (isSelected) option.color else option.color.copy(alpha = 0.6f),
+                modifier = Modifier.size(28.dp)
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = option.title,
+                fontSize = 11.sp,
+                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                color = Color.White
+            )
+            Text(
+                text = option.subtitle,
+                fontSize = 9.sp,
+                color = Color.White.copy(alpha = 0.6f)
+            )
         }
     }
 }
@@ -529,6 +726,7 @@ private fun LoginForm(email: String, onEmailChange: (String) -> Unit, emailError
 @Composable
 private fun RegisterForm(form: RegisterFormState, userType: String, onNameChange: (String) -> Unit, onEmailChange: (String) -> Unit,
     onPhoneChange: (String) -> Unit, onPasswordChange: (String) -> Unit, onConfirmPasswordChange: (String) -> Unit,
+    onVehicleTypeChange: (String) -> Unit, onCarModelChange: (String) -> Unit, onCarPlateChange: (String) -> Unit,
     onRegisterClick: () -> Unit, isLoading: Boolean) {
     Column {
         AnimatedTextField(value = form.name, onValueChange = onNameChange, label = "Full Name", icon = Icons.Outlined.Person,
@@ -546,6 +744,21 @@ private fun RegisterForm(form: RegisterFormState, userType: String, onNameChange
         Spacer(modifier = Modifier.height(16.dp))
         AnimatedTextField(value = form.confirmPassword, onValueChange = onConfirmPasswordChange, label = "Confirm Password", icon = Icons.Outlined.Lock,
             isPassword = true, imeAction = ImeAction.Done, isError = form.confirmPasswordError != null, errorMessage = form.confirmPasswordError ?: "", onDone = onRegisterClick)
+
+        if (userType == "driver") {
+            Spacer(modifier = Modifier.height(20.dp))
+            HorizontalDivider(color = Color.White.copy(alpha = 0.15f))
+            Spacer(modifier = Modifier.height(16.dp))
+            Text("Thong tin xe", fontSize = 14.sp, color = Color.White.copy(alpha = 0.7f), modifier = Modifier.padding(bottom = 12.dp))
+            VehicleTypeSelector(selectedType = form.vehicleType, onTypeSelected = onVehicleTypeChange)
+            Spacer(modifier = Modifier.height(16.dp))
+            AnimatedTextField(value = form.carModel, onValueChange = onCarModelChange, label = "Mau xe (VD: Toyota Camry)", icon = Icons.Default.DirectionsCar,
+                isError = form.carModelError != null, errorMessage = form.carModelError ?: "")
+            Spacer(modifier = Modifier.height(12.dp))
+            AnimatedTextField(value = form.carPlate, onValueChange = onCarPlateChange, label = "Bien so xe (VD: 43A-123.45)", icon = Icons.Default.Badge,
+                isError = form.carPlateError != null, errorMessage = form.carPlateError ?: "")
+        }
+
         Spacer(modifier = Modifier.height(24.dp))
         GradientButton(text = "Create Account", onClick = onRegisterClick,
             enabled = form.name.isNotBlank() && form.email.isNotBlank() && form.phone.isNotBlank() && form.password.isNotBlank() && form.confirmPassword.isNotBlank(), isLoading = isLoading)

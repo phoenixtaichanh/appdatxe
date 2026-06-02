@@ -121,20 +121,12 @@ class RideDetailViewModel @javax.inject.Inject constructor(
         viewModelScope.launch {
             _state.value = _state.value.copy(paymentCreating = true, paymentError = null)
             val result = paymentRepository.createPayment(rideId, _state.value.selectedPaymentMethod)
-            result.onSuccess { response ->
-                val paymentData = response.data
-                if (paymentData != null) {
-                    _state.value = _state.value.copy(
-                        paymentCreating = false,
-                        paymentCreated = true,
-                        paymentUrl = paymentData.paymentUrl
-                    )
-                } else {
-                    _state.value = _state.value.copy(
-                        paymentCreating = false,
-                        paymentError = "Tạo thanh toán thất bại"
-                    )
-                }
+            result.onSuccess { paymentData ->
+                _state.value = _state.value.copy(
+                    paymentCreating = false,
+                    paymentCreated = true,
+                    paymentUrl = paymentData.paymentUrl
+                )
             }.onFailure { e ->
                 _state.value = _state.value.copy(
                     paymentCreating = false,

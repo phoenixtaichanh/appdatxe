@@ -51,7 +51,28 @@ async function findActiveByUser(userId, userType) {
     return rows[0] || null;
 }
 
-async function updateStatus(id, status) {
+async function updateStatus(id, status, userId, userType) {
+    const [ride] = await pool.query(
+        `${RIDE_SELECT} WHERE r.id = ?`, [id]
+    );
+    if (!ride[0]) return null;
+
+    const isPassenger = ride[0].passenger_id === userId;
+    const isAssignedDriver = ride[0].driver_id === userId;
+    const isPending = ride[0].status === 'pending';
+    const isDriver = userType === 'driver';
+
+    // Passenger: can only update their own rides
+    if (!isDriver && !isPassenger) return null;
+    // Driver: can accept pending rides, or update rides they're assigned to
+    if (isDriver && isPending && status === 'accepted') {
+        // Accepting a pending ride - allowed
+    } else if (isDriver && isAssignedDriver) {
+        // Updating own assigned ride - allowed
+    } else if (isDriver && !isAssignedDriver) {
+        return null; // Driver trying to update ride not assigned to them
+    }
+
     let query = 'UPDATE rides SET status = ?';
     const params = [status];
 

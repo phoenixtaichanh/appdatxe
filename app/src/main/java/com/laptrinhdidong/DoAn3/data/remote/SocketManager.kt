@@ -21,6 +21,20 @@ data class RideStatusUpdate(
     val timestamp: Long
 )
 
+data class NewRideNotification(
+    val rideId: Int,
+    val pickupLat: Double,
+    val pickupLng: Double,
+    val pickupAddress: String,
+    val destAddress: String,
+    val vehicleType: String,
+    val distanceKm: Double,
+    val durationMin: Int,
+    val price: Double,
+    val passengerName: String,
+    val timestamp: Long
+)
+
 object SocketManager {
     private const val TAG = "SocketManager"
 
@@ -36,6 +50,9 @@ object SocketManager {
 
     private val _connectionState = MutableSharedFlow<Boolean>(replay = 1)
     val connectionState: SharedFlow<Boolean> = _connectionState
+
+    private val _newRideFlow = MutableSharedFlow<NewRideNotification>(replay = 0)
+    val newRideFlow: SharedFlow<NewRideNotification> = _newRideFlow
 
     fun init(baseUrl: String) {
         this.baseUrl = baseUrl.removeSuffix("/api/").removeSuffix("/")
@@ -115,6 +132,31 @@ object SocketManager {
                     }
                 } catch (e: Exception) {
                     Log.e(TAG, "ride:status:changed parse error: ${e.message}")
+                }
+            }
+
+            s.on("new_ride") { args ->
+                try {
+                    if (args.isNotEmpty()) {
+                        val data = args[0] as JSONObject
+                        val notification = NewRideNotification(
+                            rideId = data.getInt("rideId"),
+                            pickupLat = data.getDouble("pickupLat"),
+                            pickupLng = data.getDouble("pickupLng"),
+                            pickupAddress = data.optString("pickupAddress", ""),
+                            destAddress = data.optString("destAddress", ""),
+                            vehicleType = data.optString("vehicleType", "motorbike"),
+                            distanceKm = data.optDouble("distanceKm", 0.0),
+                            durationMin = data.optInt("durationMin", 0),
+                            price = data.optDouble("price", 0.0),
+                            passengerName = data.optString("passengerName", "Khach"),
+                            timestamp = data.optLong("timestamp", System.currentTimeMillis())
+                        )
+                        _newRideFlow.tryEmit(notification)
+                        Log.d(TAG, "New ride available: #${notification.rideId} - ${notification.pickupAddress}")
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "new_ride parse error: ${e.message}")
                 }
             }
         }

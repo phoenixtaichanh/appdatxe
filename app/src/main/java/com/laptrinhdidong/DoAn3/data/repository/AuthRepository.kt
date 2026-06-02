@@ -50,11 +50,15 @@ class AuthRepository(
         email: String,
         password: String,
         phone: String,
-        userType: String
+        userType: String,
+        vehicleType: String? = null,
+        carModel: String? = null,
+        carColor: String? = null,
+        carPlate: String? = null
     ): Result<AuthResponse> = withContext(Dispatchers.IO) {
         try {
             val response = apiService.register(
-                RegisterRequest(email, password, name, phone, userType)
+                RegisterRequest(email, password, name, phone, userType, vehicleType, carModel, carColor, carPlate)
             )
             if (response.isSuccessful) {
                 val body = response.body()!!

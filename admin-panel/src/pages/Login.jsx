@@ -7,8 +7,8 @@ import { Car, Eye, EyeOff, AlertCircle } from 'lucide-react';
 export default function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
-  const [email, setEmail] = useState('admin@test.com');
-  const [password, setPassword] = useState('password123');
+  const [email, setEmail] = useState('owner@doan3.vn');
+  const [password, setPassword] = useState('Admin@123');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -20,15 +20,9 @@ export default function Login() {
 
     try {
       const res = await authAPI.login(email, password);
-      const { token, user } = res.data;
+      const { token, admin } = res.data.data;
 
-      if (!['owner', 'revenue_manager', 'admin'].includes(user.user_type)) {
-        setError('Bạn không có quyền truy cập Admin Panel.');
-        setLoading(false);
-        return;
-      }
-
-      login(token, user);
+      login(token, admin);
       navigate('/dashboard');
     } catch (err) {
       setError(err.response?.data?.message || 'Email hoặc mật khẩu không đúng.');
@@ -110,8 +104,11 @@ export default function Login() {
 
           <div className="mt-6 p-4 bg-blue-50 rounded-xl">
             <p className="text-xs text-blue-700 font-medium mb-2">Tài khoản test:</p>
-            <p className="text-xs text-blue-600">admin@test.com / password123</p>
-            <p className="text-xs text-blue-600">manager@test.com / password123</p>
+            <p className="text-xs text-blue-600">owner@doan3.vn / Admin@123</p>
+            <p className="text-xs text-blue-600">admin@doan3.vn / Admin@123</p>
+            <p className="text-xs text-blue-600">consultant@doan3.vn / Admin@123</p>
+            <p className="text-xs text-blue-600">passenger@test.com / password123</p>
+            <p className="text-xs text-blue-600">driver1@test.com / password123</p>
           </div>
         </div>
       </div>

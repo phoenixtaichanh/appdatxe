@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const http = require('http');
+const path = require('path');
 require('dotenv').config();
 
 const { testConnection } = require('./database/db');
@@ -13,6 +14,10 @@ const aiRoutes = require('./routes/ai');
 const chatRoutes = require('./routes/chat');
 const paymentRoutes = require('./routes/payments');
 const adminRoutes = require('./routes/admin');
+const supportRoutes = require('./routes/support');
+const faqRoutes = require('./routes/faq');
+const adminAuthRoutes = require('./routes/adminAuth');
+const adminSupportRoutes = require('./routes/adminSupport');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -44,10 +49,19 @@ app.get('/', (req, res) => {
             ai: '/api/ai',
             chat: '/api/chat',
             payments: '/api/payments',
-            admin: '/api/admin'
+            admin: '/api/admin',
+            adminAuth: '/api/admin-auth',
+            adminSupport: '/api/admin-support'
         },
         websocket: 'Socket.IO connected on same port'
     });
+});
+
+// Serve admin panel static files
+const adminPanelPath = path.join(__dirname, '../../admin-panel/dist');
+app.use(express.static(adminPanelPath));
+app.get('/admin', (req, res) => {
+    res.sendFile(path.join(adminPanelPath, 'index.html'));
 });
 
 // Routes
@@ -60,6 +74,10 @@ app.use('/api/ai', aiRoutes);
 app.use('/api/chat', chatRoutes.router);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/support', supportRoutes);
+app.use('/api/faq', faqRoutes);
+app.use('/api/admin-auth', adminAuthRoutes);
+app.use('/api/admin-support', adminSupportRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

@@ -3,7 +3,7 @@ import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
   LayoutDashboard, Users, Car, MapPin, BarChart3,
-  LogOut, ChevronRight, Menu, X, UserCircle
+  LogOut, ChevronRight, Menu, X, UserCircle, MessageCircle
 } from 'lucide-react';
 
 const navItems = [
@@ -12,6 +12,7 @@ const navItems = [
   { to: '/drivers', label: 'Tài xế', icon: Car },
   { to: '/rides', label: 'Chuyến đi', icon: MapPin },
   { to: '/statistics', label: 'Thống kê', icon: BarChart3 },
+  { to: '/chat', label: 'Hỗ trợ', icon: MessageCircle },
 ];
 
 export default function Layout() {

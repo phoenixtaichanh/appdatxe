@@ -11,7 +11,7 @@ const router = express.Router();
 // POST /api/auth/register
 router.post('/register', async (req, res, next) => {
     try {
-        const { email, password, name, phone, user_type } = req.body;
+        const { email, password, name, phone, user_type, vehicle_type, car_model, car_color, car_plate } = req.body;
 
         if (!email || !password || !name) {
             return res.status(400).json({ success: false, message: 'Email, password, and name are required' });
@@ -29,7 +29,10 @@ router.post('/register', async (req, res, next) => {
         });
 
         if (user_type === 'driver') {
-            await pool.query('INSERT INTO drivers (user_id) VALUES (?)', [userId]);
+            await pool.query(
+                'INSERT INTO drivers (user_id, car_model, car_color, license_plate) VALUES (?, ?, ?, ?)',
+                [userId, car_model || null, car_color || null, car_plate || null]
+            );
         }
 
         const token = jwt.sign(
@@ -48,6 +51,7 @@ router.post('/register', async (req, res, next) => {
                 name,
                 phone: phone || null,
                 user_type: user_type || 'passenger',
+                vehicle_type: vehicle_type || null,
                 rating: 5.0,
                 total_rides: 0
             }
@@ -82,6 +86,22 @@ router.post('/login', async (req, res, next) => {
             { expiresIn: '30d' }
         );
 
+        // Get vehicle type for drivers
+        let vehicleType = null;
+        if (user.user_type === 'driver') {
+            const [driverRows] = await pool.query(
+                'SELECT car_model, car_color, license_plate FROM drivers WHERE user_id = ?',
+                [user.id]
+            );
+            if (driverRows.length > 0) {
+                vehicleType = {
+                    car_model: driverRows[0].car_model,
+                    car_color: driverRows[0].car_color,
+                    license_plate: driverRows[0].license_plate
+                };
+            }
+        }
+
         res.json({
             success: true,
             message: 'Login successful',
@@ -95,6 +115,7 @@ router.post('/login', async (req, res, next) => {
                 profile_image: user.profile_image,
                 rating: user.rating,
                 total_rides: user.total_rides,
+                vehicle_type: vehicleType,
                 created_at: user.created_at
             }
         });
@@ -213,7 +234,7 @@ router.post('/forgot-password', async (req, res, next) => {
             success: true,
             message: 'Nếu email tồn tại trong hệ thống, mã OTP sẽ được gửi.',
             // Development only - include OTP in response so tester can use it without email
-            ...(process.env.NODE_ENV !== 'production' && { _dev_otp: otpCode }),
+            ...(process.env.NODE_ENV === 'development' && { _dev_otp: otpCode }),
         });
     } catch (error) {
         next(error);
@@ -356,7 +377,7 @@ router.post('/resend-otp', async (req, res, next) => {
         res.json({
             success: true,
             message: 'Nếu email tồn tại trong hệ thống, mã OTP mới sẽ được gửi.',
-            ...(process.env.NODE_ENV !== 'production' && { _dev_otp: otpCode }),
+            ...(process.env.NODE_ENV === 'development' && { _dev_otp: otpCode }),
         });
     } catch (error) {
         next(error);

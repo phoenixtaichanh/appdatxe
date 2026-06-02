@@ -28,12 +28,8 @@ class PaymentRepository(
             try {
                 val response = apiService.createPayment(CreatePaymentRequest(rideId, paymentMethod))
                 if (response.isSuccessful) {
-                    val body = response.body()!!
-                    if (body.success) {
-                        Result.success(body)
-                    } else {
-                        Result.failure(Exception(body.message ?: "Failed to create payment"))
-                    }
+                    response.body()?.let { Result.success(it) }
+                        ?: Result.failure(Exception("Empty response"))
                 } else {
                     Result.failure(Exception("Server error: ${response.code()}"))
                 }
@@ -61,12 +57,8 @@ class PaymentRepository(
             try {
                 val response = apiService.confirmPayment(paymentId, ConfirmPaymentRequest(status))
                 if (response.isSuccessful) {
-                    val body = response.body()!!
-                    if (body.success) {
-                        Result.success(body)
-                    } else {
-                        Result.failure(Exception(body.message ?: "Failed to confirm payment"))
-                    }
+                    response.body()?.let { Result.success(it) }
+                        ?: Result.failure(Exception("Empty response"))
                 } else {
                     Result.failure(Exception("Server error: ${response.code()}"))
                 }

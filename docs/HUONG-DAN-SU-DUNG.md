@@ -1,8 +1,8 @@
 # Hướng Dẫn Sử Dụng Ứng Dụng Đặt Xe Thông Minh DoAn3
 
-> **Dự án:** Ứng dụng đặt xe thông minh kết hợp trợ lý du lịch AI  
-> **Nền tảng:** Android Native (Kotlin + Jetpack Compose)  
-> **Ngày cập nhật:** 2026-05-17
+> **Dự án:** Ứng dụng đặt xe thông minh kết hợp trợ lý du lịch AI
+> **Nền tảng:** Android Native (Kotlin + Jetpack Compose)
+> **Ngày cập nhật:** 2026-05-21
 
 ---
 
@@ -85,13 +85,18 @@ Màn hình kết hợp Login và Register trong một giao diện với tab chuy
 
 #### Đăng ký (Tab Register)
 1. Nhấn tab **Register**
-2. Chọn loại tài khoản: **Passenger** hoặc **Driver**
+2. Chọn loại tài khoản: **Passenger** (Khách hàng) hoặc **Driver** (Tài xế)
+   - Nếu chọn **Driver**: hiển thị thêm phần chọn loại xe, mẫu xe và biển số
 3. Nhập **Full Name** (bắt buộc)
 4. Nhập **Email** (format hợp lệ)
 5. Nhập **Phone Number** (tối thiểu 10 số)
 6. Nhập **Password** (tối thiểu 6 ký tự) → hiển thị chỉ báo độ mạnh mật khẩu
 7. Nhập **Confirm Password** (phải khớp với password)
-8. Nhấn **Create Account**
+8. Nếu là **Tài xế**, chọn thêm:
+   - **Loại phương tiện**: Xe máy / Ô tô 4 chỗ / Ô tô 7 chỗ
+   - **Mẫu xe** (VD: Toyota Camry) - bắt buộc
+   - **Biển số xe** (VD: 43A-123.45) - bắt buộc
+9. Nhấn **Create Account**
 
 #### Quên mật khẩu
 - Nhấn link **"Forgot Password?"** bên dưới form Login → chuyển đến `ForgotPasswordScreen`
@@ -1500,4 +1505,86 @@ FK: original_ride_id → rides.id
 
 ---
 
-*Tài liệu được tạo tự động từ phân tích codebase Android - 2026-05-17*
+## Phụ lục: Cấu hình mạng LAN & Tài khoản
+
+### Kết nối ứng dụng qua mạng LAN (khuyến nghị)
+
+Để test ứng dụng trên **2 điện thoại thật** cùng lúc, cả hai điện thoại và máy tính phải kết nối **cùng một mạng WiFi**.
+
+**Bước 1: Tìm IP máy tính**
+1. Mở CMD (Command Prompt) trên Windows
+2. Gõ lệnh: `ipconfig`
+3. Tìm dòng **IPv4 Address** (thường có dạng `192.168.x.x`)
+
+**Bước 2: Cập nhật AppConfig.kt**
+Mở file `AppConfig.kt` và đảm bảo dòng này đúng IP:
+```kotlin
+const val BASE_URL = "http://192.168.x.x:3000/api/"
+```
+Thay `192.168.x.x` bằng IP thực của máy tính.
+
+**Bước 3: Build lại APK**
+```bash
+.\gradlew.bat assembleDebug
+```
+Cài đặt APK mới trên cả 2 điện thoại.
+
+**Bước 4: Khởi động Backend**
+```bash
+cd backend
+node src/index.js
+```
+Backend chạy tại `http://localhost:3000`.
+
+### Admin Panel
+
+Admin Panel là giao diện quản lý dành cho nhân viên tư vấn và quản trị viên.
+
+**Truy cập:** Mở trình duyện truy cập `http://localhost:3000/admin`
+
+**Tài khoản đăng nhập Admin Panel:**
+
+| Email | Mật khẩu | Vai trò |
+|-------|----------|---------|
+| owner@doan3.vn | Admin@123 | Chủ sở hữu |
+| admin@doan3.vn | Admin@123 | Quản trị viên |
+| consultant@doan3.vn | Admin@123 | Nhân viên tư vấn |
+| tu_van1@doan3.vn | Admin@123 | Nhân viên tư vấn |
+| tai_chinh@doan3.vn | Admin@123 | Nhân viên tài chính |
+
+**Tài khoản test ứng dụng (app):**
+
+| Email | Mật khẩu | Vai trò |
+|-------|----------|---------|
+| passenger@test.com | password123 | Khách hàng |
+| driver1@test.com | password123 | Tài xế |
+| driver2@test.com | password123 | Tài xế |
+
+### Tính năng Chat Hỗ trợ Realtime
+
+Nhân viên tư vấn có thể trả lời khách hàng ngay trên Admin Panel:
+
+1. Đăng nhập bằng tài khoản `consultant@doan3.vn` / `Admin@123`
+2. Vào mục **Hỗ trợ** trên sidebar
+3. Danh sách cuộc trò chuyện hiển thị realtime
+4. Chọn cuộc trò chuyện để xem và trả lời
+5. Nhấn **Đánh dấu xong** để đóng hội thoại
+
+Khách hàng trên app liên hệ tư vấn qua: **Hồ sơ → Hỗ trợ & FAQ → Trò chuyện với tư vấn viên**
+
+### FAQ (Câu hỏi thường gặp)
+
+Ứng dụng có sẵn **28 câu hỏi thường gặp** trong các danh mục:
+
+| Danh mục | Số câu hỏi |
+|----------|-----------|
+| Câu hỏi chung (General) | 4 |
+| Đặt xe & Chuyến đi (Booking) | 6 |
+| Thanh toán (Payment) | 5 |
+| Tài khoản (Account) | 4 |
+| Tài xế (Driver) | 4 |
+| Kỹ thuật (Technical) | 5 |
+
+---
+
+*Tài liệu được cập nhật: 2026-05-21*

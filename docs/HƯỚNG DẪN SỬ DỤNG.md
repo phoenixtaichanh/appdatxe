@@ -1,12 +1,15 @@
 # Huong Dan Su Dung - DoAn3 Taxi App
 
-> **Phien ban:** 1.3.0
+> **Phien ban:** 1.4.0
 
 > **De tai:** Xay dung he thong dat xe thong minh ket hop tro ly du lich AI
 
 > **Cong nghe:** Kotlin (Android) + Node.js (Backend) + MySQL + AI
 
 > **Cap nhat moi nhat:**
+> - [2026-05-21] Fix driver nhan chuyen real-time qua Socket.IO (khach dat xe -> tai xe nhan chuyen ngay)
+> - [2026-05-21] Fix Admin Panel login goi sai endpoint auth
+> - [2026-05-21] Fix driver account bi dinh tuyen sang giao dien khach hang sau khi dang nhap
 > - [2026-05-13] Full Admin Panel (React + Vite + Tailwind CSS)
 > - [2026-05-13] OTP / Quen mat khau (Backend: 4 endpoints Nodemailer, Android: 3 screens)
 > - [2026-05-13] Real Payment Integration (VNPay + MoMo HMAC-SHA256)
@@ -68,6 +71,50 @@
 | Gradle | 8.x |
 | Android SDK | API 36 |
 
+### Tao file .env cho Backend
+
+Tao file `.env` trong thu muc `backend/src/`:
+
+```
+# Database
+DB_HOST=localhost
+DB_USER=root
+DB_PASSWORD=YOUR_MYSQL_PASSWORD
+DB_NAME=doan3_db
+DB_PORT=3306
+
+# JWT
+JWT_SECRET=doan3_jwt_secret_key_2024_very_long_string
+JWT_EXPIRES_IN=30d
+
+# Server
+PORT=3000
+
+# Email (Nodemailer - cho OTP)
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your_email@gmail.com
+SMTP_PASS=your_app_password
+
+# Firebase (FCM)
+FIREBASE_PROJECT_ID=your_project_id
+FIREBASE_PRIVATE_KEY=your_private_key
+FIREBASE_CLIENT_EMAIL=your_client_email
+
+# VNPay
+VNPAY_TMN_CODE=YOUR_TMN_CODE
+VNPAY_HASH_SECRET=YOUR_HASH_SECRET
+VNPAY_URL=https://sandbox.vnpayment.vn/apis/vnpay-express/
+
+# MoMo
+MOMO_PARTNER_CODE=YOUR_PARTNER_CODE
+MOMO_ACCESS_KEY=YOUR_ACCESS_KEY
+MOMO_SECRET_KEY=YOUR_SECRET_KEY
+MOMO_ENDPOINT=https://sandbox.momodev.mola.vn
+```
+
+> Neu chua co MySQL, tai xuong tai mysql.com/downloads. Mat khau mac dinh thuong la `root` hoac trong.
+
 ### Cai dat Backend
 
 ```powershell
@@ -85,8 +132,7 @@ npm install
    ```sql
    CREATE DATABASE doan3_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
    ```
-4. Import schema: Server -> Data Import -> chon file `backend/src/database/schema.sql`
-5. Import seed data: Server -> Data Import -> chon file `backend/src/database/seed.sql`
+4. Import schema va seed: Server -> Data Import -> chon thu muc `backend/src/database/` -> Start Import
 
 **Cach 2: Su dung Command Line**
 
@@ -110,9 +156,19 @@ npm install
 
 ## 2. Khoi chay Backend
 
+### Buoc 1: Khoi dong MySQL
+
+Dam bao MySQL Server dang chay. Kiem tra trong Services (services.msc) hoac chay:
+
 ```powershell
-cd backend
-node src/index.js
+mysql -u root -p -e "SELECT 1"
+```
+
+### Buoc 2: Chay Backend
+
+```powershell
+cd backend/src
+node index.js
 ```
 
 Backend chay tai: `http://localhost:3000`
@@ -120,18 +176,74 @@ Backend chay tai: `http://localhost:3000`
 **Kiem tra Backend hoat dong:**
 
 ```powershell
-Invoke-RestMethod -Uri "http://localhost:3000/" -Method GET
+Invoke-RestMethod -Uri "http://localhost:3000/api/health" -Method GET
 ```
 
 **Output mong muon:**
 
 ```json
 {
-  "success": true,
-  "message": "DoAn3 API is running",
-  "version": "1.0.0"
+  "status": "ok",
+  "message": "DoAn3 Backend is running!"
 }
 ```
+
+**Neu gap loi "Access denied" hoac "No connection":**
+- Kiem tra MySQL dang chay
+- Kiem tra mat khau trong `backend/src/.env` (DB_PASSWORD) khop voi mat khau MySQL cua ban
+- Kiem tra da import database: `mysql -u root -p -e "USE doan3_db; SHOW TABLES;"`
+
+---
+
+## 2b. Su dung ngrok (test nhieu thiet bi)
+
+Neu muon test app tren nhieu thiet bi (emulator + dien thoai that) ma khong can cung mang LAN, hoac muon backend co the truy cap tu internet, dung **ngrok**.
+
+### Buoc 1: Tai va cai dat ngrok
+
+1. Tai ngrok tai [ngrok.com/download](https://ngrok.com/download)
+2. Giai nen file `ngrok.exe` (khong can cai dat)
+3. Tao tai khoan tai [dashboard.ngrok.com](https://dashboard.ngrok.com) (mien phi)
+4. Copy Auth Token tu trang dashboard
+
+### Buoc 2: Cai authtoken
+
+```powershell
+ngrok config add-authtoken YOUR_AUTH_TOKEN
+```
+
+### Buoc 3: Chay ngrok (cua so terminal rieng)
+
+```powershell
+ngrok http 3000
+```
+
+Ket qua:
+
+```
+Session Status                online
+Account                      your@email.com
+Forwarding                   https://xxxx-xxxx.ngrok-free.app  -> http://localhost:3000
+```
+
+### Buoc 4: Cap nhat AppConfig.kt
+
+Sau khi co URL ngrok, doi `BASE_URL` trong `AppConfig.kt`:
+
+```kotlin
+const val BASE_URL = "https://xxxx-xxxx.ngrok-free.app/api/"
+```
+
+### Buoc 5: Build lai APK va cai dat tren moi thiet bi
+
+```powershell
+cd app
+./gradlew assembleDebug
+```
+
+Giờ ca emulator va dien thoai deu dung chung URL ngrok, backend Socket.IO cung hoat dong binh thuong.
+
+> **Luu y:** Ngrok phiên ban mien phi tat ket noi sau 2 gio. Tai khoan tra phi giu URL co dinh. Moi lan chay lai ngrok, URL se thay doi - can cap nhat lai `AppConfig.kt` va build lai APK.
 
 ---
 
@@ -141,16 +253,18 @@ Invoke-RestMethod -Uri "http://localhost:3000/" -Method GET
 
 ```powershell
 cd app
-.\gradlew assembleDebug
+./gradlew assembleDebug
 ```
 
 APK xuat tai: `app/build/outputs/apk/debug/app-debug.apk`
 
 ### Cai dat tren may that
 
-1. Dam bao Backend dang chay va thiet bi cung mang LAN
-2. Cap nhat IP thuc cua may chay Backend trong `AppConfig.kt`
-3. Build lai APK
+1. Dam bao Backend dang chay va co the truy cap (localhost hoac ngrok)
+2. Cap nhat `BASE_URL` trong `AppConfig.kt`:
+   - Neu dung localhost (emulator): `http://10.0.2.2:3000/api/`
+   - Neu dung ngrok: `https://xxxx-xxxx.ngrok-free.app/api/`
+3. Build lai APK: `.\gradlew assembleDebug`
 4. Copy APK vao dien thoai va cai dat
 
 ### Cau hinh Google Maps API Key
@@ -191,35 +305,34 @@ Output trong `admin-panel/dist/`
 
 ### Dang nhap Admin
 
-| Email | Mat khau |
-|-------|----------|
-| admin@test.com | password123 |
-| manager@test.com | password123 |
+| Email | Mat khau | Quyen |
+|-------|----------|-------|
+| owner@doan3.vn | Admin@123 | Chu so huu - toan quyen |
+| admin@doan3.vn | Admin@123 | Quan tri vien |
+| tai_chinh@doan3.vn | Admin@123 | Nhan vien tai chinh |
+
+> **Luu y:** Day la tai khoan Admin Panel, khac voi tai khoan app mobile (passenger@test.com, driver1@test.com). Tai khoan admin nam trong bang `admin_users`, tai khoan mobile nam trong bang `users`.
 
 ---
 
 ## 5. Tai khoan Test
 
-### Khach hang
+### Tai khoan Mobile (app dat xe)
 
-| Email | Mat khau | Mo ta |
-|-------|----------|-------|
-| passenger@test.com | password123 | Tai khoan khach hang mau |
+| Email | Mat khau | Loai tai khoan |
+|-------|----------|---------------|
+| passenger@test.com | password123 | Khach hang |
+| driver1@test.com | password123 | Tai xe |
+| driver2@test.com | password123 | Tai xe |
+| driver3@test.com | password123 | Tai xe |
 
-### Tai xe
-
-| Email | Mat khau | Trang thai |
-|-------|----------|------------|
-| driver1@test.com | password123 | San sang nhan chuyen |
-| driver2@test.com | password123 | San sang nhan chuyen |
-| driver3@test.com | password123 | San sang nhan chuyen |
-
-### Admin
+### Tai khoan Admin Panel (quan tri)
 
 | Email | Mat khau | Quyen |
 |-------|----------|-------|
-| admin@test.com | password123 | Owner - toan quyen |
-| manager@test.com | password123 | Revenue Manager - chi xem doanh thu |
+| owner@doan3.vn | Admin@123 | Chu so huu - toan quyen |
+| admin@doan3.vn | Admin@123 | Quan tri vien |
+| tai_chinh@doan3.vn | Admin@123 | Nhan vien tai chinh |
 
 ---
 
@@ -704,12 +817,19 @@ admin-panel/
 | `driver:location` | `{ lat, lng, rideId, timestamp }` | Vi tri tai xe realtime |
 | `ride:status:changed` | `{ rideId, status, timestamp }` | Trang thai chuyen di thay doi |
 
+### Server -> Driver (Real-time Ride Notifications)
+
+| Event | Payload | Mo ta |
+|-------|---------|-------|
+| `new_ride` | `{ rideId, pickupLat, pickupLng, pickupAddress, destAddress, vehicleType, distanceKm, durationMin, price, passengerName, timestamp }` | Khach dat xe - tai xe nhan chuyen ngay khong can refresh |
+
 ### Passenger -> Server
 
 | Event | Payload | Mo ta |
 |-------|---------|-------|
 | `join:ride` | `rideId` | Tham gia phong chuyen di |
 | `leave:ride` | `rideId` | Roi phong chuyen di |
+| `request:driver:location` | `{ rideId }` | Yeu cau vi tri tai xe |
 
 ### Chat
 
@@ -721,24 +841,46 @@ admin-panel/
 
 ## 14. Xu ly loi thuong gap
 
-### Loi "Route not found" (Backend)
+### Loi "connectex: No connection could be made" / "Route not found" (Backend)
 
-**Nguyen nhan:** Backend chua khoi dong hoac chay loi.
+**Nguyen nhan:** Backend chua duoc khoi dong.
 
 **Cach xu ly:**
-1. Kiem tra backend dang chay: `node src/index.js`
-2. Kiem tra port 3000 khong bi chiem: `netstat -ano | findstr 3000`
-3. Kiem tra MySQL ket noi: `mysql -u root -p -e "SELECT 1"`
-4. Restart backend: `node src/index.js`
+1. Kiem tra MySQL dang chay
+2. Kiem tra da tao file `.env` trong `backend/src/`
+3. Chay backend: `cd backend/src ; node index.js`
+4. Kiem tra port: `netstat -ano | findstr 3000`
+5. Kiem tra database: `mysql -u root -p -e "USE doan3_db; SHOW TABLES;"`
+
+### Loi "Access denied for user 'root'@'localhost' (using password: NO)"
+
+**Nguyen nhan:** Mat khau MySQL khong dung hoac chua tao file `.env`.
+
+**Cach xu ly:**
+1. Tao file `backend/src/.env` voi DB_PASSWORD dung mat khau MySQL cua ban
+2. Kiem tra MySQL dang chay
+3. Dam bao da import schema va seed data
 
 ### Loi "Khong goi duoc API" (Android)
 
-**Nguyen nhan:** IP khong dung hoac Backend khong cho phep CORS.
+**Nguyen nhan:** BASE_URL khong dung hoac Backend khong cho phep CORS.
 
 **Cach xu ly:**
-1. Kiem tra IP may chay Backend: `ipconfig`
-2. Cap nhat `AppConfig.kt`:
-   - Emulator: `http://10.0.2.2:3000/api/`
+1. Neu dung emulator Android Studio: `http://10.0.2.2:3000/api/`
+2. Neu dung dien thoai that + ngrok: `https://xxxx-xxxx.ngrok-free.app/api/`
+3. Dam bao may that va dien thoai deu co the truy cap backend (neu dung LAN, cung mang)
+4. Tat Windows Firewall cho port 3000
+
+### Loi "Tai xe khong thay chuyen moi" (Real-time)
+
+**Nguyen nhan:** Driver chua bat online, hoac Socket.IO chua ket noi dung.
+
+**Cach xu ly:**
+1. Tai xe phai nhan nut "Online" truoc
+2. Khi online, tai xe tu dong nhan thong bao Socket.IO khi co khach dat xe
+3. Neu van khong thay, kiem tra `BASE_URL` co dung khong (ca http va https deu phu hop voi ngrok)
+
+### Loi "Ban do khong hien thi" (Google Maps)
    - May that: `http://192.168.x.x:3000/api/` (IP cua may chay Backend)
 3. Dam bao may that va dien thoai cung mang LAN
 4. Tat firewall Windows cho port 3000
@@ -749,11 +891,11 @@ admin-panel/
 
 **Cach xu ly:**
 1. Kiem tra MySQL dang chay
-2. Cap nhat `.env` trong backend:
+2. Cap nhat `backend/src/.env` voi mat khau MySQL cua ban:
    ```
    DB_HOST=localhost
    DB_USER=root
-   DB_PASSWORD=1234
+   DB_PASSWORD=YOUR_MYSQL_PASSWORD
    DB_NAME=doan3_db
    DB_PORT=3306
    ```
@@ -828,4 +970,4 @@ pending -> accepted -> arrived -> in_progress -> completed
 
 ---
 
-*Luu y: Tai lieu nay duoc cap nhat lan cuoi: 2026-05-13*
+*Luu y: Tai lieu nay duoc cap nhat lan cuoi: 2026-05-21*

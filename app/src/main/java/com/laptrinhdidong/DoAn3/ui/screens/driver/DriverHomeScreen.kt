@@ -30,6 +30,7 @@ import com.laptrinhdidong.DoAn3.data.remote.dto.BatchDto
 import com.laptrinhdidong.DoAn3.data.remote.dto.DriverDto
 import com.laptrinhdidong.DoAn3.data.remote.dto.EarningsDto
 import com.laptrinhdidong.DoAn3.data.remote.dto.RideDto
+import com.laptrinhdidong.DoAn3.data.remote.NewRideNotification
 import com.laptrinhdidong.DoAn3.data.repository.DriverRepository
 import com.laptrinhdidong.DoAn3.ui.components.*
 import com.laptrinhdidong.DoAn3.ui.theme.*
@@ -92,12 +93,51 @@ class DriverHomeViewModel @javax.inject.Inject constructor(
                 if (newStatus) {
                     loadAvailableRides()
                     loadEarnings()
+                    // Start listening for new ride notifications
+                    startNewRideListener()
                 }
             }.onFailure {
                 _state.value = _state.value.copy(
                     isLoading = false,
                     errorMessage = "Không thể cập nhật trạng thái"
                 )
+            }
+        }
+    }
+
+    private fun startNewRideListener() {
+        viewModelScope.launch {
+            SocketManager.newRideFlow.collect { notification ->
+                // Convert notification to RideDto for display
+                val ride = RideDto(
+                    id = notification.rideId,
+                    pickupLat = notification.pickupLat,
+                    pickupLng = notification.pickupLng,
+                    pickupAddress = notification.pickupAddress,
+                    destLat = 0.0,
+                    destLng = 0.0,
+                    destAddress = notification.destAddress,
+                    status = "pending",
+                    passengerId = 0,
+                    driverId = null,
+                    passengerName = notification.passengerName,
+                    driverName = null,
+                    vehicleType = notification.vehicleType,
+                    price = notification.price,
+                    distanceKm = notification.distanceKm,
+                    durationMin = notification.durationMin,
+                    createdAt = java.time.Instant.ofEpochMilli(notification.timestamp).toString(),
+                    startedAt = null,
+                    completedAt = null,
+                    driverRating = null,
+                    passengerRating = null
+                )
+                // Add to available rides if not already present
+                if (_state.value.availableRides.none { it.id == ride.id }) {
+                    _state.value = _state.value.copy(
+                        availableRides = listOf(ride) + _state.value.availableRides
+                    )
+                }
             }
         }
     }
@@ -197,6 +237,7 @@ fun DriverHomeScreen(
     onNavigateToProfile: () -> Unit,
     onNavigateToBatch: () -> Unit,
     onNavigateToAISchedule: () -> Unit,
+    onNavigateToSupport: () -> Unit = {},
     onLogout: () -> Unit,
     viewModel: DriverHomeViewModel = hiltViewModel()
 ) {
@@ -224,56 +265,141 @@ fun DriverHomeScreen(
                 .fillMaxSize()
                 .background(DarkBackground)
         ) {
-            // Top bar
-            Row(
+            // Top bar - enhanced with action bar
+            Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .statusBarsPadding()
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                    .padding(horizontal = 16.dp),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = DarkCard.copy(alpha = 0.95f)),
+                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    // Driver avatar
-                    Box(
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    // Profile row
+                    Row(
                         modifier = Modifier
-                            .size(44.dp)
-                            .clip(CircleShape)
-                            .background(Brush.linearGradient(GradientPrimary)),
-                        contentAlignment = Alignment.Center
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = state.driver?.name?.firstOrNull()?.uppercase() ?: "D",
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 18.sp
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Column {
-                        Text(
-                            text = "Xin chào, ${state.driver?.name ?: "Tài xế"}",
-                            color = TextPrimary,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                        Text(
-                            text = if (state.isOnline) "Đang trực tuyến" else "Ngoại tuyến",
-                            color = if (state.isOnline) AccentGreen else StatusOffline,
-                            fontSize = 12.sp
-                        )
-                    }
-                }
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .clip(CircleShape)
+                                    .background(Brush.linearGradient(GradientPrimary)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = state.driver?.name?.firstOrNull()?.uppercase() ?: "D",
+                                    color = Color.White,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 20.sp
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                Text(
+                                    text = "Xin chào, ${state.driver?.name ?: "Tài xế"}",
+                                    color = TextPrimary,
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(8.dp)
+                                            .clip(CircleShape)
+                                            .background(if (state.isOnline) AccentGreen else StatusOffline)
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = if (state.isOnline) "Đang trực tuyến" else "Ngoại tuyến",
+                                        color = if (state.isOnline) AccentGreen else StatusOffline,
+                                        fontSize = 12.sp
+                                    )
+                                }
+                            }
+                        }
 
-                Row {
-                    IconButton(onClick = onNavigateToEarnings) {
-                        Icon(Icons.Default.AccountBalanceWallet, "Earnings", tint = AccentYellow)
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            IconButton(
+                                onClick = onNavigateToEarnings,
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clip(CircleShape)
+                                    .background(AccentYellow.copy(alpha = 0.15f))
+                            ) {
+                                Icon(Icons.Default.AccountBalanceWallet, "Earnings", tint = AccentYellow, modifier = Modifier.size(20.dp))
+                            }
+                            IconButton(
+                                onClick = onNavigateToProfile,
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clip(CircleShape)
+                                    .background(PrimaryPurple.copy(alpha = 0.15f))
+                            ) {
+                                Icon(Icons.Default.Person, "Profile", tint = PrimaryPurple, modifier = Modifier.size(20.dp))
+                            }
+                            IconButton(
+                                onClick = onLogout,
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clip(CircleShape)
+                                    .background(AccentRed.copy(alpha = 0.15f))
+                            ) {
+                                Icon(Icons.AutoMirrored.Filled.Logout, "Logout", tint = AccentRed, modifier = Modifier.size(20.dp))
+                            }
+                        }
                     }
-                    IconButton(onClick = onNavigateToProfile) {
-                        Icon(Icons.Default.Person, "Profile", tint = TextPrimary)
-                    }
-                    IconButton(onClick = onLogout) {
-                        Icon(Icons.AutoMirrored.Filled.Logout, "Logout", tint = AccentRed)
+
+                    HorizontalDivider(color = Color.White.copy(alpha = 0.06f), thickness = 1.dp)
+
+                    // Action bar row
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 8.dp, vertical = 10.dp),
+                        horizontalArrangement = Arrangement.SpaceEvenly,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        ActionBarButtonDriver(
+                            icon = Icons.Default.DirectionsCar,
+                            label = "Chuyến mới",
+                            iconColor = AccentGreen,
+                            bgColor = AccentGreen.copy(alpha = 0.15f),
+                            onClick = { selectedTab = 0 }
+                        )
+                        ActionBarButtonDriver(
+                            icon = Icons.Default.Route,
+                            label = "Đang chạy",
+                            iconColor = AccentBlue,
+                            bgColor = AccentBlue.copy(alpha = 0.15f),
+                            onClick = { selectedTab = 1 }
+                        )
+                        ActionBarButtonDriver(
+                            icon = Icons.Default.Group,
+                            label = "Batch",
+                            iconColor = PrimaryPurple,
+                            bgColor = PrimaryPurple.copy(alpha = 0.15f),
+                            onClick = { selectedTab = 2 }
+                        )
+                        ActionBarButtonDriver(
+                            icon = Icons.Default.Wallet,
+                            label = "Thu nhập",
+                            iconColor = AccentYellow,
+                            bgColor = AccentYellow.copy(alpha = 0.15f),
+                            onClick = onNavigateToEarnings
+                        )
+                        ActionBarButtonDriver(
+                            icon = Icons.Default.Support,
+                            label = "Hỗ trợ",
+                            iconColor = AccentGreen,
+                            bgColor = AccentGreen.copy(alpha = 0.15f),
+                            onClick = onNavigateToSupport
+                        )
                     }
                 }
             }
@@ -344,43 +470,7 @@ fun DriverHomeScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Tabs
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(DarkCard)
-                    .padding(4.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                listOf("Chuyến mới", "Đang chạy", "Batch").forEachIndexed { index, title ->
-                    val isSelected = selectedTab == index
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(
-                                if (isSelected) Brush.linearGradient(GradientPrimary)
-                                else Brush.linearGradient(listOf(Color.Transparent, Color.Transparent))
-                            )
-                            .clickable { selectedTab = index }
-                            .padding(vertical = 10.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = title,
-                            color = if (isSelected) Color.White else TextSecondary,
-                            fontSize = 13.sp,
-                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             // Content based on tab
             when (selectedTab) {
@@ -868,5 +958,45 @@ private fun BatchCard(
                 gradient = listOf(AccentBlue, AccentBlue.copy(alpha = 0.7f))
             )
         }
+    }
+}
+
+@Composable
+private fun ActionBarButtonDriver(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    label: String,
+    iconColor: Color,
+    bgColor: Color,
+    onClick: () -> Unit
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .clip(RoundedCornerShape(12.dp))
+            .clickable(onClick = onClick)
+            .padding(vertical = 4.dp, horizontal = 4.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(42.dp)
+                .clip(CircleShape)
+                .background(bgColor),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = label,
+                tint = iconColor,
+                modifier = Modifier.size(20.dp)
+            )
+        }
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = label,
+            color = TextSecondary,
+            fontSize = 10.sp,
+            fontWeight = FontWeight.Medium,
+            maxLines = 1
+        )
     }
 }

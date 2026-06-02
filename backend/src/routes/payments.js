@@ -1,6 +1,7 @@
 const express = require('express');
 const crypto = require('crypto-js');
 const auth = require('../middleware/auth');
+const { pool } = require('../database/db');
 
 const router = express.Router();
 
@@ -110,22 +111,20 @@ function buildMoMoUrl(amount, orderId, orderInfo, returnUrl) {
 
 // GET /api/payments/methods - Get available payment methods
 router.get('/methods', auth, async (req, res) => {
-    res.json({
-        success: true,
-        data: PAYMENT_METHODS.map(m => ({
-            code: m,
-            label: m === 'cash' ? 'Tien mat' : m === 'wallet' ? 'Wallet' : m === 'vnpay' ? 'VNPay' : 'MoMo',
-            icon: m,
-            enabled: true
-        }))
-    });
+        res.json({
+            data: PAYMENT_METHODS.map(m => ({
+                code: m,
+                label: m === 'cash' ? 'Tien mat' : m === 'wallet' ? 'Wallet' : m === 'vnpay' ? 'VNPay' : 'MoMo',
+                icon: m,
+                enabled: true
+            }))
+        });
 });
 
 // POST /api/payments/create - Create payment for a ride
 router.post('/create', auth, async (req, res, next) => {
     try {
         const { ride_id, payment_method } = req.body;
-        const { pool } = require('../database/db');
 
         if (!ride_id) {
             return res.status(400).json({ success: false, message: 'ride_id is required' });
@@ -151,7 +150,6 @@ router.post('/create', auth, async (req, res, next) => {
 
         if (existing.length > 0) {
             return res.json({
-                success: true,
                 message: 'Payment already exists',
                 data: {
                     id: existing[0].id,
@@ -205,7 +203,6 @@ router.post('/create', auth, async (req, res, next) => {
         }
 
         res.status(201).json({
-            success: true,
             message: method === 'cash' ? 'Cash payment recorded' : 'Payment created',
             data: {
                 id: result.insertId,
@@ -227,7 +224,6 @@ router.post('/create', auth, async (req, res, next) => {
 // GET /api/payments/:id - Get payment details
 router.get('/:id', auth, async (req, res, next) => {
     try {
-        const { pool } = require('../database/db');
         const [rows] = await pool.query(
             'SELECT * FROM transactions WHERE id = ? AND user_id = ?',
             [req.params.id, req.user.id]
@@ -238,7 +234,6 @@ router.get('/:id', auth, async (req, res, next) => {
         }
 
         res.json({
-            success: true,
             data: {
                 id: rows[0].id,
                 ride_id: rows[0].ride_id,
@@ -259,7 +254,6 @@ router.get('/:id', auth, async (req, res, next) => {
 // POST /api/payments/:id/confirm - Confirm/callback payment (for VNPay/MoMo)
 router.post('/:id/confirm', auth, async (req, res, next) => {
     try {
-        const { pool } = require('../database/db');
         const { status } = req.body;
 
         const validStatuses = ['completed', 'failed'];
@@ -281,7 +275,7 @@ router.post('/:id/confirm', auth, async (req, res, next) => {
             [status, req.params.id]
         );
 
-        res.json({ success: true, message: `Payment marked as ${status}` });
+        res.json({ message: `Payment marked as ${status}` });
     } catch (error) {
         next(error);
     }
@@ -290,7 +284,6 @@ router.post('/:id/confirm', auth, async (req, res, next) => {
 // GET /api/payments/history - Get payment history
 router.get('/', auth, async (req, res, next) => {
     try {
-        const { pool } = require('../database/db');
         const { type, page = 1, limit = 20 } = req.query;
         const offset = (parseInt(page) - 1) * parseInt(limit);
 
@@ -317,7 +310,6 @@ router.get('/', auth, async (req, res, next) => {
         );
 
         res.json({
-            success: true,
             data: rows.map(r => ({
                 id: r.id,
                 ride_id: r.ride_id,
@@ -352,7 +344,6 @@ router.get('/admin/all', auth, async (req, res, next) => {
             return res.status(403).json({ success: false, message: 'Admin access only' });
         }
 
-        const { pool } = require('../database/db');
         const { from_date, to_date, status, page = 1, limit = 50 } = req.query;
         const offset = (parseInt(page) - 1) * parseInt(limit);
 
@@ -399,7 +390,6 @@ router.get('/admin/all', auth, async (req, res, next) => {
         );
 
         res.json({
-            success: true,
             data: rows,
             summary: {
                 total_revenue: parseFloat(summary[0]?.total_revenue || 0),
