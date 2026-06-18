@@ -496,10 +496,13 @@ CREATE TRIGGER after_ride_completed_driver AFTER UPDATE ON rides FOR EACH ROW UP
 -- SEED: MOBILE ACCOUNTS (password: password123)
 
 INSERT INTO users (email, password, name, phone, user_type, rating, total_rides) VALUES
-    ('passenger@test.com', '$2a$10$/QdXnU3i1q6H9XQXJYmIkeVLo9x8k7PdJtYO7JUscELTu7iTYc5tW', 'Nguyen Van Test', '0909123456', 'passenger', 5.00, 0),
-    ('driver1@test.com', '$2a$10$/QdXnU3i1q6H9XQXJYmIkeVLo9x8k7PdJtYO7JUscELTu7iTYc5tW', 'Tran Van Tai 1', '0909234567', 'driver', 4.80, 42),
-    ('driver2@test.com', '$2a$10$/QdXnU3i1q6H9XQXJYmIkeVLo9x8k7PdJtYO7JUscELTu7iTYc5tW', 'Le Thi Xe 2', '0909345678', 'driver', 4.65, 28),
-    ('driver3@test.com', '$2a$10$/QdXnU3i1q6H9XQXJYmIkeVLo9x8k7PdJtYO7JUscELTu7iTYc5tW', 'Pham Xuan Lai 3', '0909456789', 'driver', 4.92, 65),
+    ('passenger@test.com', '$2a$10$p4lsVUZpJWzIse4I7Yf/Q.U8i1JDqU2N32LBzUuASNKj9u7dQmh9i', 'Nguyen Van Test', '0909123456', 'passenger', 5.00, 0),
+    ('passenger@gmail.com', '$2a$10$p4lsVUZpJWzIse4I7Yf/Q.U8i1JDqU2N32LBzUuASNKj9u7dQmh9i', 'Nguyen Van Khach', '0909123457', 'passenger', 5.00, 0),
+    ('driver1@test.com', '$2a$10$p4lsVUZpJWzIse4I7Yf/Q.U8i1JDqU2N32LBzUuASNKj9u7dQmh9i', 'Tran Van Tai 1', '0909234567', 'driver', 4.80, 42),
+    ('driver1@gmail.com', '$2a$10$p4lsVUZpJWzIse4I7Yf/Q.U8i1JDqU2N32LBzUuASNKj9u7dQmh9i', 'Tran Van Tai 1', '0909234567', 'driver', 4.80, 42),
+    ('driver@gmail.com', '$2a$10$p4lsVUZpJWzIse4I7Yf/Q.U8i1JDqU2N32LBzUuASNKj9u7dQmh9i', 'Tai Xe Mac Dinh', '0909234568', 'driver', 4.90, 35),
+    ('driver2@test.com', '$2a$10$p4lsVUZpJWzIse4I7Yf/Q.U8i1JDqU2N32LBzUuASNKj9u7dQmh9i', 'Le Thi Xe 2', '0909345678', 'driver', 4.65, 28),
+    ('driver3@test.com', '$2a$10$p4lsVUZpJWzIse4I7Yf/Q.U8i1JDqU2N32LBzUuASNKj9u7dQmh9i', 'Pham Xuan Lai 3', '0909456789', 'driver', 4.92, 65),
     ('consultant@doan3.vn', '$2a$10$NQswCX7hQU/ruxwizDs6YeM7oc1WozDlBh9gsiulT3a18reIARI2W', 'Tran Thi Tu Van', '0909555666', 'consultant', 5.00, 0)
 ON DUPLICATE KEY UPDATE email = email;
 
